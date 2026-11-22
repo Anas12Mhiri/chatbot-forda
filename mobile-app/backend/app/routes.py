@@ -28,12 +28,13 @@ GREETINGS = {
     "good afternoon",
     "good evening",
 }
-OLLAMA_ERROR_MESSAGES = {
-    "server_unavailable": "Le serveur Ollama est inaccessible. Vérifiez qu’il est lancé, puis réessayez.",
-    "model_not_installed": "Le modèle configuré n’est pas installé dans Ollama. Vérifiez son nom ou téléchargez-le avec `ollama pull`.",
-    "insufficient_memory": "La mémoire disponible ne suffit pas pour charger ce modèle. Fermez des applications ou choisissez un modèle plus petit.",
+ASSISTANT_ERROR_MESSAGES = {
+    "api_key_missing": "Le service Groq n’est pas configuré. Ajoutez GROQ_API_KEY au serveur de l’application.",
+    "api_key_invalid": "La clé Groq est invalide ou n’a pas accès à ce modèle. Vérifiez la configuration du serveur.",
+    "rate_limited": "Le service Groq est temporairement limité. Veuillez patienter, puis réessayer.",
+    "provider_unavailable": "Le service Groq est inaccessible pour le moment. Vérifiez votre connexion, puis réessayez.",
     "timeout": "Le modèle met trop de temps à répondre. Réessayez ou choisissez un modèle plus rapide.",
-    "model_runtime_error": "Ollama a rencontré une erreur pendant la génération. Vérifiez le serveur et sa mémoire disponible.",
+    "model_runtime_error": "Groq n’a pas pu générer une réponse. Vérifiez le modèle configuré et réessayez.",
     "invalid_response": "La réponse du modèle était vide ou invalide. Veuillez réessayer.",
 }
 
@@ -95,7 +96,7 @@ def build_router(
         except IntentClassificationError as exc:
             return ChatResponse(
                 level="medical_advice",
-                message=OLLAMA_ERROR_MESSAGES.get(
+                message=ASSISTANT_ERROR_MESSAGES.get(
                     exc.kind,
                     "Le service de réponse est indisponible. Pour une décision médicale personnelle, consultez un professionnel de santé.",
                 ),

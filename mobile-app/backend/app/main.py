@@ -18,7 +18,7 @@ def create_app(
     doctor_repository: DoctorRepository | None = None,
     recommendation_engine: DoctorRecommendationEngine | None = None,
 ) -> FastAPI:
-    """Build an app with injectable triage, Ollama, and doctor-catalog components."""
+    """Build an app with injectable triage, Groq, and doctor-catalog components."""
     policy = triage_policy or ConservativeDefaultPolicy()
     refiner = question_refiner or QuestionRefiner()
     classifier = intent_classifier or IntentClassifier()

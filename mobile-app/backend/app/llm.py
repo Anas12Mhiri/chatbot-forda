@@ -1,4 +1,4 @@
-"""Optional follow-up wording refinement; the LLM never makes triage decisions."""
+"""Optional Groq follow-up wording refinement; it never makes triage decisions."""
 
 import logging
 import os
@@ -9,20 +9,21 @@ logger = logging.getLogger(__name__)
 
 
 class QuestionRefiner:
-    """Optionally rephrase questions through Ollama's native chat API."""
+    """Optionally rephrase questions through Groq's chat completions API."""
 
     def __init__(self) -> None:
-        self.model = os.getenv("OLLAMA_MODEL", "qwen3:1.7b")
-        self.base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+        self.model = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+        self.api_key = os.getenv("GROQ_API_KEY", "").strip()
+        self.base_url = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1").rstrip("/")
 
     async def refine(self, question: str) -> str | None:
         """Return a French rephrasing, or `None` if the provider is unavailable."""
+        if not self.api_key:
+            return None
         payload = {
             "model": self.model,
-            "stream": False,
-            "think": False,
-            "keep_alive": "5m",
-            "options": {"temperature": 0, "num_ctx": 2048, "num_predict": 128},
+            "temperature": 0.1,
+            "max_completion_tokens": 128,
             "messages": [
                 {
                     "role": "system",
@@ -39,13 +40,14 @@ class QuestionRefiner:
         try:
             async with httpx.AsyncClient(timeout=45.0) as client:
                 response = await client.post(
-                    f"{self.base_url}/api/chat",
+                    f"{self.base_url}/chat/completions",
+                    headers={"Authorization": f"Bearer {self.api_key}"},
                     json=payload,
                 )
                 response.raise_for_status()
-                text = response.json()["message"]["content"]
+                text = response.json()["choices"][0]["message"]["content"]
                 if isinstance(text, str) and text.strip() and len(text) <= 500:
                     return text.strip()
         except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as exc:
-            logger.warning("Question wording provider unavailable: type=%s", type(exc).__name__)
+            logger.warning("Groq question refiner unavailable: type=%s", type(exc).__name__)
         return None

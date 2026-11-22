@@ -4,24 +4,20 @@ This Expo Go client contains the patient and doctor interfaces. It uses JavaScri
 
 ## Start the chatbot API
 
-Install Ollama and download the model once:
-
-```powershell
-ollama pull qwen3:1.7b
-```
-
-In a PowerShell terminal, start the API:
+In a PowerShell terminal, set your GroqCloud key and start the API. The secure prompt avoids writing the key into PowerShell command history:
 
 ```powershell
 cd mobile-app\backend
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
-$env:OLLAMA_MODEL = "qwen3:1.7b"
+$secureGroqKey = Read-Host "Groq API key" -AsSecureString
+$env:GROQ_API_KEY = [System.Net.NetworkCredential]::new("", $secureGroqKey).Password
+$env:GROQ_MODEL = "openai/gpt-oss-20b"
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-Keep Ollama and this API running while using the assistant. The phone and computer must be on the same Wi-Fi. Allow Python through Windows Firewall on private networks if prompted.
+Keep this API running while using the assistant. The phone and computer must be on the same Wi-Fi. Allow Python through Windows Firewall on private networks if prompted. Assistant messages are processed by GroqCloud; do not send identifying or sensitive health information.
 
 ## Start Expo Go
 
