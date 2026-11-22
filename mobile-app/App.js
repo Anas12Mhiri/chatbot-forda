@@ -20,6 +20,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import * as SecureStore from 'expo-secure-store';
+import DIRECTORY_DOCTORS from './doctor-directory.json';
 
 const COLORS = {
   ink: '#204F83', deep: '#163F6A', teal: '#2E6FA5', tealDark: '#1D5889',
@@ -40,7 +41,12 @@ const DEMO_DOCTORS = [
   { id: 'demo-4', name: 'Dr. Sami Khemiri', specialty: 'Pediatrics', clinic: 'Cabinet Ennasr Santé', address: 'Rue du Lac, Les Berges du Lac', latitude: 36.8434, longitude: 10.2778, demo: true, slots: APPOINTMENT_SLOTS },
   { id: 'demo-5', name: 'Dr. Amel Jaziri', specialty: 'Ophthalmology', clinic: 'Centre Ophtalmologique Tunis', address: 'Rue Ibn Khaldoun, Bab Bhar', latitude: 36.7988, longitude: 10.1742, demo: true, slots: APPOINTMENT_SLOTS },
 ];
-const SPECIALTIES = ['All specialties', 'Cardiology', 'General practice', 'Dermatology', 'Pediatrics', 'Ophthalmology', 'Psychiatry'];
+const DIRECTORY_SPECIALTIES = [...new Set(DIRECTORY_DOCTORS.map((doctor) => doctor.specialty).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+const SPECIALTIES = ['All specialties', 'Cardiology', 'General practice', 'Dermatology', 'Pediatrics', 'Ophthalmology', 'Psychiatry', ...DIRECTORY_SPECIALTIES];
+const SPECIALTY_ALIASES = {
+  cardiology: 'cardiologie', 'general practice': 'medecine generale', dermatology: 'dermatologie',
+  pediatrics: 'pediatrie', ophthalmology: 'ophtalmologie', psychiatry: 'psychiatrie',
+};
 const COPY = {
   en: {
     signIn: 'Sign in', careCloser: 'CARE, CLOSER TO YOU', signInSubtitle: 'Find care and manage your appointments.', phone: 'Phone number', phoneHint: 'Enter 8 digits', password: 'Password', passwordPlaceholder: 'Your password', forgot: 'Forgot password?', createPatient: 'Create a patient account', newToCareway: 'New to AI-HealthLab?', pilotPatient: 'Tunis pilot · Patient access',
@@ -118,6 +124,14 @@ function distanceKm(from, to) {
 }
 function formatDistance(km) { return km < 1 ? `${Math.round(km * 1000)} m away` : `${km.toFixed(1)} km away`; }
 function isPsychiatrySpecialist(specialty = '') { return /psychiatr|psychiat|طب نفسي/i.test(specialty); }
+function searchNormalize(value = '') { return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().trim(); }
+function specialtyMatches(selected, doctorSpecialty) {
+  if (!selected || selected === 'All specialties') return true;
+  const selectedKey = searchNormalize(selected);
+  const target = searchNormalize(SPECIALTY_ALIASES[selectedKey] || selected);
+  const actual = searchNormalize(doctorSpecialty);
+  return actual === selectedKey || actual === target;
+}
 
 const EVENT_COPY = {
   en: { eyebrow: 'MENTAL WELL-BEING', title: 'Support meetings', subtitle: 'Meet with a psychiatrist and others in a moderated, respectful space.', safety: 'Peer support can help people feel less alone, but it does not replace professional care. Keep shared topics general and avoid names, contact details, or personal medical information. If you may be in immediate danger, contact local emergency services.', empty: 'No meetings are scheduled yet', emptyHint: 'Psychiatrist-led meetings will appear here when published.', join: 'Join meeting', leave: 'Leave meeting', attendees: 'people interested', demo: 'DEMO EVENT', demoHost: 'Psychiatrist · demo host', doctorTitle: 'Peer-support meetings', doctorSub: 'Create a moderated group meeting around a mental well-being topic.', create: 'Publish meeting', topic: 'Meeting title', theme: 'Topic', date: 'Date', time: 'Time', format: 'Format', online: 'Online', inPerson: 'In person', place: 'Link or meeting place', description: 'What attendees can expect', own: 'Your published meetings', none: 'You have not published a meeting yet.', required: 'Add a title, topic, date, time, and meeting details.', psychiatristOnly: 'This section is available to psychiatrist accounts. Clinician identity must be verified by the service before public launch.' },
@@ -199,18 +213,19 @@ export default function App() {
 
   const providers = useMemo(() => [
     ...DEMO_DOCTORS,
+    ...DIRECTORY_DOCTORS,
     ...users.filter((user) => user.role === 'doctor').map((user) => ({
       id: user.id, name: user.name, specialty: user.specialty, clinic: user.clinic,
-      address: user.address, latitude: user.latitude || TUNIS.latitude,
-      longitude: user.longitude || TUNIS.longitude, doctorAccountId: user.id, slots: user.slots || APPOINTMENT_SLOTS,
+      address: user.address, latitude: user.latitude || null,
+      longitude: user.longitude || null, doctorAccountId: user.id, slots: user.slots || APPOINTMENT_SLOTS,
     })),
   ], [users]);
 
   const nearbyDoctors = useMemo(() => providers
-    .filter((doctor) => (specialty === 'All specialties' || doctor.specialty === specialty)
-      && (!query.trim() || `${doctor.name} ${doctor.specialty} ${doctor.clinic} ${doctor.address}`.toLowerCase().includes(query.trim().toLowerCase())))
-    .map((doctor) => ({ ...doctor, distance: distanceKm(userLocation, doctor) }))
-    .sort((a, b) => a.distance - b.distance), [providers, specialty, query, userLocation]);
+    .filter((doctor) => specialtyMatches(specialty, doctor.specialty)
+      && (!query.trim() || searchNormalize(`${doctor.name} ${doctor.specialty} ${doctor.clinic} ${doctor.address}`).includes(searchNormalize(query))))
+    .map((doctor) => ({ ...doctor, distance: Number.isFinite(doctor.latitude) && Number.isFinite(doctor.longitude) ? distanceKm(userLocation, doctor) : null }))
+    .sort((a, b) => (a.distance ?? Number.POSITIVE_INFINITY) - (b.distance ?? Number.POSITIVE_INFINITY) || a.name.localeCompare(b.name)), [providers, specialty, query, userLocation]);
 
   const myAppointments = appointments.filter((appointment) => appointment.patientId === currentUser?.id);
   const clinicAppointments = appointments.filter((appointment) => appointment.doctorId === currentUser?.id);
@@ -650,19 +665,22 @@ function PatientDiscovery({ doctors, query, setQuery, specialty, setSpecialty, o
     <Text style={styles.screenSubtitle}>Search by name or specialty to find a doctor who meets your needs.</Text>
     <View style={styles.searchInputWrap}><Text style={styles.searchIcon}>⌕</Text><TextInput style={styles.searchInput} placeholder="Doctor name or specialty" placeholderTextColor="#9AA7A4" value={query} onChangeText={setQuery} returnKeyType="search" /></View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.specialtyRow}>{SPECIALTIES.map((item) => <TouchableOpacity key={item} onPress={() => setSpecialty(item)} style={[styles.specialtyChip, specialty === item && styles.specialtyChipActive]}><Text style={[styles.specialtyText, specialty === item && styles.specialtyTextActive]}>{item}</Text></TouchableOpacity>)}</ScrollView>
-    <View style={styles.resultsHeader}><Text style={styles.resultsTitle}>{doctors.length} doctors</Text><Text style={styles.demoLabel}>TUNIS PILOT</Text></View>
+    <View style={styles.resultsHeader}><Text style={styles.resultsTitle}>{doctors.length} doctors</Text><Text style={styles.demoLabel}>TUNISIA DIRECTORY</Text></View>
     <ScrollView style={styles.doctorResults} contentContainerStyle={{ paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
       {doctors.length ? doctors.map((doctor) => <DoctorCard key={doctor.id} doctor={doctor} onBook={() => onBook(doctor)} />) : <View style={styles.emptyCard}><Text style={styles.emptyTitle}>No doctors found</Text><Text style={styles.emptyCopy}>Try a different name or specialty.</Text></View>}
     </ScrollView>
   </View>;
 }
 
-function DoctorCard({ doctor, onBook }) { return <View style={styles.doctorCard}><View style={styles.doctorCardTop}><Avatar name={doctor.name} /><View style={{ flex: 1 }}><View style={styles.nameLine}><Text style={styles.cardTitle} numberOfLines={1}>{doctor.name}</Text><Text style={styles.verified}>{doctor.demo ? 'DEMO' : 'NEW'}</Text></View><Text style={styles.cardSubtitle}>{doctor.specialty}</Text><Text style={styles.addressText} numberOfLines={2}>{doctor.clinic} · {doctor.address}</Text></View><Text style={styles.distanceText}>{formatDistance(doctor.distance)}</Text></View><View style={styles.cardFooter}><Text style={styles.nextAvailable}><Text style={styles.greenDot}>● </Text>Request a visit</Text><TouchableOpacity style={styles.bookButton} onPress={onBook}><Text style={styles.bookButtonText}>Choose time</Text></TouchableOpacity></View></View>; }
+function DoctorCard({ doctor, onBook }) { const directoryOnly = doctor.directory && !doctor.doctorAccountId; return <View style={styles.doctorCard}><View style={styles.doctorCardTop}><Avatar name={doctor.name} /><View style={{ flex: 1 }}><View style={styles.nameLine}><Text style={styles.cardTitle} numberOfLines={1}>{doctor.name}</Text><Text style={styles.verified}>{doctor.demo ? 'DEMO' : doctor.directory ? 'DIRECTORY' : 'NEW'}</Text></View><Text style={styles.cardSubtitle}>{doctor.specialty}{doctor.directory ? ` · ${doctor.reviewCount} reviews` : ''}</Text><Text style={styles.addressText} numberOfLines={2}>{doctor.clinic} · {doctor.address}</Text></View><Text style={styles.distanceText}>{doctor.distance == null ? 'Map pin unavailable' : formatDistance(doctor.distance)}</Text></View><View style={styles.cardFooter}><Text style={styles.nextAvailable}><Text style={styles.greenDot}>● </Text>{directoryOnly ? 'Directory listing' : 'Request a visit'}</Text><TouchableOpacity style={[styles.bookButton, directoryOnly && { backgroundColor: COLORS.muted }]} onPress={onBook} disabled={directoryOnly}><Text style={styles.bookButtonText}>{directoryOnly ? 'Listed' : 'Choose time'}</Text></TouchableOpacity></View></View>; }
 
 function PatientAppointments({ appointments, doctors, region, setRegion, locationLabel, locating, onLocate, onDiscover }) {
+  const mappedDoctors = doctors.filter((doctor) => Number.isFinite(doctor.latitude) && Number.isFinite(doctor.longitude));
+  const unlocatedCount = doctors.length - mappedDoctors.length;
   return <View style={styles.screen}><Text style={styles.eyebrow}>YOUR CARE</Text><Text style={styles.screenTitle}>Appointments</Text><Text style={styles.screenSubtitle}>Review your requests and find nearby clinics on the map.</Text><ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 18 }}>
     <View style={styles.patientMapHead}><Text style={styles.label}>Nearby doctors</Text><TouchableOpacity style={styles.locationChip} onPress={onLocate} disabled={locating}><Text style={styles.locationPin}>⌖</Text><Text style={styles.locationText}>{locating ? 'Finding you…' : locationLabel}</Text></TouchableOpacity></View>
-    <View style={styles.mapFrame}><MapView style={styles.map} region={region} onRegionChangeComplete={setRegion} showsUserLocation={locationLabel === 'Near your location'}>{doctors.map((doctor) => <Marker key={doctor.id} coordinate={{ latitude: doctor.latitude, longitude: doctor.longitude }} title={doctor.name} description={`${doctor.specialty} · ${doctor.clinic}`} pinColor={COLORS.teal} />)}</MapView><View style={styles.mapCount}><Text style={styles.mapCountText}>{doctors.length} nearby</Text></View></View>
+    <View style={styles.mapFrame}><MapView style={styles.map} region={region} onRegionChangeComplete={setRegion} showsUserLocation={locationLabel === 'Near your location'}>{mappedDoctors.map((doctor) => <Marker key={doctor.id} coordinate={{ latitude: doctor.latitude, longitude: doctor.longitude }} title={doctor.name} description={`${doctor.specialty} · ${doctor.clinic}`} pinColor={COLORS.teal} />)}</MapView><View style={styles.mapCount}><Text style={styles.mapCountText}>{mappedDoctors.length} mapped</Text></View></View>
+    {unlocatedCount > 0 && <Text style={styles.helperText}>{unlocatedCount} directory listings do not include map coordinates yet.</Text>}
     <Text style={[styles.label, { marginTop: 16 }]}>My appointment requests</Text>
     {appointments.length ? appointments.map((item) => <AppointmentCard key={item.id} appointment={item} patient />) : <View style={styles.emptyCard}><Text style={styles.emptyTitle}>No appointments yet</Text><Text style={styles.emptyCopy}>Your appointment requests and confirmations will appear here.</Text><Button title="Find a doctor" onPress={onDiscover} style={{ marginTop: 18 }} /></View>}
   </ScrollView></View>;
