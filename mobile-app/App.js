@@ -34,13 +34,6 @@ const CHAT_API_BASE_URL = (process.env.EXPO_PUBLIC_CHAT_API_URL
 const APPOINTMENT_SLOTS = ['Today · 14:30', 'Tomorrow · 09:00', 'Tomorrow · 11:30', 'Friday · 15:30'];
 const ACCOUNT_INDEX_KEY = 'careway.account-ids.v1';
 const ACCOUNT_KEY_PREFIX = 'careway.account.';
-const DEMO_DOCTORS = [
-  { id: 'demo-1', name: 'Dr. Leila Ben Salem', specialty: 'Cardiology', clinic: 'Clinique El Manar', address: 'Avenue de la Liberté, El Manar 1', latitude: 36.8362, longitude: 10.1657, demo: true, slots: APPOINTMENT_SLOTS },
-  { id: 'demo-2', name: 'Dr. Youssef Trabelsi', specialty: 'General practice', clinic: 'Cabinet Dr. Trabelsi', address: 'Rue de Marseille, Centre Ville', latitude: 36.8027, longitude: 10.1814, demo: true, slots: APPOINTMENT_SLOTS },
-  { id: 'demo-3', name: 'Dr. Mariem Gharbi', specialty: 'Dermatology', clinic: 'Centre Médical Lafayette', address: 'Avenue Hédi Nouira, Lafayette', latitude: 36.8125, longitude: 10.1767, demo: true, slots: APPOINTMENT_SLOTS },
-  { id: 'demo-4', name: 'Dr. Sami Khemiri', specialty: 'Pediatrics', clinic: 'Cabinet Ennasr Santé', address: 'Rue du Lac, Les Berges du Lac', latitude: 36.8434, longitude: 10.2778, demo: true, slots: APPOINTMENT_SLOTS },
-  { id: 'demo-5', name: 'Dr. Amel Jaziri', specialty: 'Ophthalmology', clinic: 'Centre Ophtalmologique Tunis', address: 'Rue Ibn Khaldoun, Bab Bhar', latitude: 36.7988, longitude: 10.1742, demo: true, slots: APPOINTMENT_SLOTS },
-];
 const DIRECTORY_SPECIALTIES = [...new Set(DIRECTORY_DOCTORS.map((doctor) => doctor.specialty).filter(Boolean))].sort((a, b) => a.localeCompare(b));
 const SPECIALTIES = ['All specialties', 'Cardiology', 'General practice', 'Dermatology', 'Pediatrics', 'Ophthalmology', 'Psychiatry', ...DIRECTORY_SPECIALTIES];
 const SPECIALTY_ALIASES = {
@@ -213,7 +206,6 @@ export default function App() {
   }
 
   const providers = useMemo(() => [
-    ...DEMO_DOCTORS,
     ...DIRECTORY_DOCTORS,
     ...users.filter((user) => user.role === 'doctor').map((user) => ({
       id: user.id, name: user.name, specialty: user.specialty, clinic: user.clinic,
