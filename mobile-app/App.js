@@ -34,6 +34,11 @@ const CHAT_API_BASE_URL = (process.env.EXPO_PUBLIC_CHAT_API_URL
 const APPOINTMENT_SLOTS = ['Today · 14:30', 'Tomorrow · 09:00', 'Tomorrow · 11:30', 'Friday · 15:30'];
 const ACCOUNT_INDEX_KEY = 'careway.account-ids.v1';
 const ACCOUNT_KEY_PREFIX = 'careway.account.';
+const ACCOUNT_RESET_COPY = {
+  en: { link: 'Reset patient accounts on this device', title: 'Delete patient accounts?', body: 'This permanently removes all patient accounts saved on this device. Doctor and secretary accounts will stay.', cancel: 'Cancel', confirm: 'Delete accounts', done: (count) => `Deleted ${count} patient account${count === 1 ? '' : 's'} from this device.`, failure: 'Could not delete the saved accounts. Please try again.' },
+  fr: { link: 'Supprimer les comptes patients de cet appareil', title: 'Supprimer les comptes patients ?', body: 'Cette action supprime définitivement tous les comptes patients enregistrés sur cet appareil. Les comptes médecins et secrétaires seront conservés.', cancel: 'Annuler', confirm: 'Supprimer les comptes', done: (count) => `${count} compte${count === 1 ? '' : 's'} patient supprimé${count === 1 ? '' : 's'} de cet appareil.`, failure: 'Impossible de supprimer les comptes enregistrés. Réessayez.' },
+  ar: { link: 'حذف حسابات المرضى من هذا الجهاز', title: 'حذف حسابات المرضى؟', body: 'سيؤدي ذلك إلى حذف جميع حسابات المرضى المحفوظة على هذا الجهاز نهائيًا. ستبقى حسابات الأطباء والسكرتارية.', cancel: 'إلغاء', confirm: 'حذف الحسابات', done: (count) => `تم حذف ${count} من حسابات المرضى من هذا الجهاز.`, failure: 'تعذر حذف الحسابات المحفوظة. حاول مرة أخرى.' },
+};
 const DIRECTORY_SPECIALTIES = [...new Set(DIRECTORY_DOCTORS.map((doctor) => doctor.specialty).filter(Boolean))].sort((a, b) => a.localeCompare(b));
 const SPECIALTIES = ['All specialties', 'Cardiology', 'General practice', 'Dermatology', 'Pediatrics', 'Ophthalmology', 'Psychiatry', ...DIRECTORY_SPECIALTIES];
 const SPECIALTY_ALIASES = {
@@ -228,6 +233,30 @@ export default function App() {
 
   function showMessage(message) { Alert.alert('AI-HealthLab', message); }
   function updateField(key, value) { setForm((current) => ({ ...current, [key]: value })); }
+  async function clearPatientAccounts() {
+    const copy = ACCOUNT_RESET_COPY[language] || ACCOUNT_RESET_COPY.en;
+    try {
+      const idsJson = await SecureStore.getItemAsync(ACCOUNT_INDEX_KEY);
+      const ids = idsJson ? JSON.parse(idsJson) : [];
+      const records = await Promise.all(ids.map((id) => SecureStore.getItemAsync(`${ACCOUNT_KEY_PREFIX}${id}`)));
+      const savedUsers = records.filter(Boolean).map((record) => JSON.parse(record));
+      const patients = savedUsers.filter((user) => user.role === 'patient');
+      await Promise.all(patients.map((user) => SecureStore.deleteItemAsync(`${ACCOUNT_KEY_PREFIX}${user.id}`)));
+      const remaining = savedUsers.filter((user) => user.role !== 'patient');
+      await SecureStore.setItemAsync(ACCOUNT_INDEX_KEY, JSON.stringify(remaining.map((user) => user.id)));
+      setUsers(remaining);
+      Alert.alert('AI-HealthLab', copy.done(patients.length));
+    } catch {
+      Alert.alert('AI-HealthLab', copy.failure);
+    }
+  }
+  function confirmClearPatientAccounts() {
+    const copy = ACCOUNT_RESET_COPY[language] || ACCOUNT_RESET_COPY.en;
+    Alert.alert(copy.title, copy.body, [
+      { text: copy.cancel, style: 'cancel' },
+      { text: copy.confirm, style: 'destructive', onPress: clearPatientAccounts },
+    ]);
+  }
   function openSignup() { setAuthError(''); setAccountType('adult'); setAuthMode('signup'); }
   function logout() { setCurrentUser(null); setForm({}); setAuthError(''); setAuthMode('login'); setTab('discover'); }
   async function updateCurrentDoctor(changes) {
@@ -495,7 +524,7 @@ export default function App() {
     if (authMode === 'signup') return <SignupScreen language={language} setLanguage={setLanguage} accountType={accountType} setAccountType={setAccountType} form={form} updateField={updateField} error={authError} onBack={() => { setAuthError(''); setAuthMode('login'); }} onSubmit={createAccount} onSignIn={() => { setAuthError(''); setAuthMode('login'); }} onRecovery={() => { setAuthError(''); setAuthMode('recovery'); }} />;
     if (authMode === 'doctorSignup') return <DoctorSignupScreen language={language} setLanguage={setLanguage} form={form} updateField={updateField} error={authError} onBack={() => { setAuthError(''); setForm({}); setAuthMode('login'); }} onSubmit={createDoctorAccount} />;
     if (authMode === 'recovery') return <RecoveryScreen language={language} setLanguage={setLanguage} form={form} updateField={updateField} error={authError} onBack={() => { setAuthError(''); setAuthMode('login'); }} onSubmit={recoverAccount} />;
-    return <LoginScreen language={language} setLanguage={setLanguage} form={form} updateField={updateField} error={authError} onSubmit={signIn} onSignup={openSignup} onDoctorSignup={() => { setForm({}); setAuthError(''); setAuthMode('doctorSignup'); }} onRecovery={() => { setForm((current) => ({ phone: current.phone || '' })); setAuthError(''); setAuthMode('recovery'); }} />;
+    return <LoginScreen language={language} setLanguage={setLanguage} form={form} updateField={updateField} error={authError} onSubmit={signIn} onSignup={openSignup} onDoctorSignup={() => { setForm({}); setAuthError(''); setAuthMode('doctorSignup'); }} onRecovery={() => { setForm((current) => ({ phone: current.phone || '' })); setAuthError(''); setAuthMode('recovery'); }} onClearPatientAccounts={confirmClearPatientAccounts} />;
   }
 
   return (
@@ -555,7 +584,7 @@ export default function App() {
   );
 }
 
-function LoginScreen({ language, setLanguage, form, updateField, error, onSubmit, onSignup, onDoctorSignup, onRecovery }) {
+function LoginScreen({ language, setLanguage, form, updateField, error, onSubmit, onSignup, onDoctorSignup, onRecovery, onClearPatientAccounts }) {
   return <SafeAreaView style={styles.safe}><StatusBar barStyle="dark-content"/><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><ScrollView contentContainerStyle={styles.authScroll} keyboardShouldPersistTaps="handled">
     <AuthTop language={language} setLanguage={setLanguage} />
     <View style={styles.loginIntro}><Text style={styles.eyebrow}>{tr(language, 'careCloser')}</Text><Text style={styles.authTitle}>{tr(language, 'signIn')}</Text><Text style={styles.authSubtitle}>{tr(language, 'signInSubtitle')}</Text></View>
@@ -566,6 +595,7 @@ function LoginScreen({ language, setLanguage, form, updateField, error, onSubmit
     <Button title={tr(language, 'signIn')} onPress={onSubmit} style={{ marginTop: 12 }} />
     <View style={styles.authFooter}><Text style={styles.mutedText}>{tr(language, 'newToCareway')} </Text><TouchableOpacity onPress={onSignup} accessibilityRole="button"><Text style={styles.linkText}>{tr(language, 'createPatient')}</Text></TouchableOpacity></View>
     <View style={[styles.authFooter, { marginTop: 12 }]}><Text style={styles.mutedText}>Doctor? </Text><TouchableOpacity onPress={onDoctorSignup} accessibilityRole="button"><Text style={styles.linkText}>Create doctor account</Text></TouchableOpacity></View>
+    <TouchableOpacity style={styles.forgotLink} onPress={onClearPatientAccounts} accessibilityRole="button"><Text style={[styles.linkText, { color: COLORS.muted }]}>{(ACCOUNT_RESET_COPY[language] || ACCOUNT_RESET_COPY.en).link}</Text></TouchableOpacity>
     <Text style={styles.demoCaption}>{tr(language, 'pilotPatient')}</Text>
   </ScrollView></KeyboardAvoidingView></SafeAreaView>;
 }
