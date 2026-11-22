@@ -613,7 +613,7 @@ function RecoveryScreen({ language, setLanguage, form, updateField, error, onBac
   </ScrollView></KeyboardAvoidingView></SafeAreaView>;
 }
 
-function Brand() { return <View style={styles.brand}><Image source={require('./assets/ai-healthlab-symbol.png')} style={styles.brandIcon} resizeMode="contain" accessibilityLabel="AI-HealthLab logo"/><Text style={styles.brandName}>AI-HealthLab</Text></View>; }
+function Brand() { return <View style={styles.brand}><Image source={require('./assets/ai-healthlab-app-icon.png')} style={styles.brandIcon} resizeMode="contain" accessibilityLabel="AI-HealthLab logo"/><Text style={styles.brandName}>AI-HealthLab</Text></View>; }
 function Input({ label, accessibilityLabel, ...props }) { return <View style={styles.inputGroup}><Text style={styles.label}>{label}</Text><TextInput style={styles.input} placeholderTextColor="#9AA7A4" accessibilityLabel={accessibilityLabel || label} {...props} /></View>; }
 function AuthTop({ language, setLanguage }) { return <View style={styles.authTop}><Brand /><LanguageSelector language={language} onChange={setLanguage} /></View>; }
 function LanguageSelector({ language, onChange }) { return <View style={styles.languageSelector} accessibilityRole="radiogroup" accessibilityLabel={tr(language, 'language')}>{[['en', 'EN'], ['fr', 'FR'], ['ar', 'ع']].map(([code, label]) => <TouchableOpacity key={code} onPress={() => onChange(code)} style={[styles.languageOption, language === code && styles.languageOptionActive]} accessibilityRole="radio" accessibilityLabel={label} accessibilityState={{ selected: language === code }}><Text style={[styles.languageOptionText, language === code && styles.languageOptionTextActive]}>{label}</Text></TouchableOpacity>)}</View>; }
