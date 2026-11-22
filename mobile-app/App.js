@@ -39,7 +39,7 @@ const DEMO_DOCTORS = [
   { id: 'demo-4', name: 'Dr. Sami Khemiri', specialty: 'Pediatrics', clinic: 'Cabinet Ennasr Santé', address: 'Rue du Lac, Les Berges du Lac', latitude: 36.8434, longitude: 10.2778, demo: true, slots: APPOINTMENT_SLOTS },
   { id: 'demo-5', name: 'Dr. Amel Jaziri', specialty: 'Ophthalmology', clinic: 'Centre Ophtalmologique Tunis', address: 'Rue Ibn Khaldoun, Bab Bhar', latitude: 36.7988, longitude: 10.1742, demo: true, slots: APPOINTMENT_SLOTS },
 ];
-const SPECIALTIES = ['All specialties', 'Cardiology', 'General practice', 'Dermatology', 'Pediatrics', 'Ophthalmology'];
+const SPECIALTIES = ['All specialties', 'Cardiology', 'General practice', 'Dermatology', 'Pediatrics', 'Ophthalmology', 'Psychiatry'];
 const COPY = {
   en: {
     signIn: 'Sign in', careCloser: 'CARE, CLOSER TO YOU', signInSubtitle: 'Find care and manage your appointments.', phone: 'Phone number', phoneHint: 'Enter 8 digits', password: 'Password', passwordPlaceholder: 'Your password', forgot: 'Forgot password?', createPatient: 'Create a patient account', newToCareway: 'New to Careway?', pilotPatient: 'Tunis pilot · Patient access',
@@ -116,12 +116,21 @@ function distanceKm(from, to) {
   return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 function formatDistance(km) { return km < 1 ? `${Math.round(km * 1000)} m away` : `${km.toFixed(1)} km away`; }
+function isPsychiatrySpecialist(specialty = '') { return /psychiatr|psychiat|طب نفسي/i.test(specialty); }
+
+const EVENT_COPY = {
+  en: { eyebrow: 'MENTAL WELL-BEING', title: 'Support meetings', subtitle: 'Meet with a psychiatrist and others in a moderated, respectful space.', safety: 'Peer support can help people feel less alone, but it does not replace professional care. Keep shared topics general and avoid names, contact details, or personal medical information. If you may be in immediate danger, contact local emergency services.', empty: 'No meetings are scheduled yet', emptyHint: 'Psychiatrist-led meetings will appear here when published.', join: 'Join meeting', leave: 'Leave meeting', attendees: 'people interested', doctorTitle: 'Peer-support meetings', doctorSub: 'Create a moderated group meeting around a mental well-being topic.', create: 'Publish meeting', topic: 'Meeting title', theme: 'Topic', date: 'Date', time: 'Time', format: 'Format', online: 'Online', inPerson: 'In person', place: 'Link or meeting place', description: 'What attendees can expect', own: 'Your published meetings', none: 'You have not published a meeting yet.', required: 'Add a title, topic, date, time, and meeting details.', psychiatristOnly: 'This section is available to psychiatrist accounts. Clinician identity must be verified by the service before public launch.' },
+  fr: { eyebrow: 'BIEN-ÊTRE MENTAL', title: 'Rencontres de soutien', subtitle: 'Échangez avec un psychiatre et d’autres personnes dans un cadre modéré et respectueux.', safety: 'Le soutien entre pairs peut aider, mais ne remplace pas un suivi professionnel. Gardez les sujets généraux et évitez les noms, coordonnées ou informations médicales personnelles. En cas de danger immédiat, contactez les services d’urgence locaux.', empty: 'Aucune rencontre prévue', emptyHint: 'Les rencontres animées par un psychiatre apparaîtront ici après publication.', join: 'Participer', leave: 'Se désinscrire', attendees: 'personnes intéressées', doctorTitle: 'Rencontres de soutien', doctorSub: 'Créez une rencontre modérée autour d’un sujet de bien-être mental.', create: 'Publier la rencontre', topic: 'Titre', theme: 'Sujet', date: 'Date', time: 'Heure', format: 'Format', online: 'En ligne', inPerson: 'En présentiel', place: 'Lien ou lieu', description: 'À quoi s’attendre', own: 'Vos rencontres publiées', none: 'Vous n’avez pas encore publié de rencontre.', required: 'Ajoutez un titre, un sujet, une date, une heure et les détails.', psychiatristOnly: 'Section réservée aux comptes de psychiatres. L’identité du professionnel devra être vérifiée avant le lancement public.' },
+  ar: { eyebrow: 'الصحة النفسية', title: 'لقاءات دعم', subtitle: 'تبادلوا الحديث مع طبيب نفسي وأشخاص آخرين في مساحة آمنة بإشراف مختص.', safety: 'دعم الأقران لا يحل محل الرعاية المهنية. تجنبوا مشاركة الأسماء أو بيانات الاتصال أو المعلومات الطبية الشخصية. عند وجود خطر فوري، اتصلوا بخدمات الطوارئ المحلية.', empty: 'لا توجد لقاءات مجدولة بعد', emptyHint: 'ستظهر هنا اللقاءات التي ينظمها الأطباء النفسيون.', join: 'انضم إلى اللقاء', leave: 'إلغاء المشاركة', attendees: 'مهتمون', doctorTitle: 'لقاءات دعم جماعي', doctorSub: 'أنشئ لقاءً بإشراف مختص حول موضوع للصحة النفسية.', create: 'نشر اللقاء', topic: 'عنوان اللقاء', theme: 'الموضوع', date: 'التاريخ', time: 'الوقت', format: 'الصيغة', online: 'عن بُعد', inPerson: 'حضوري', place: 'الرابط أو المكان', description: 'ماذا يتوقع المشاركون', own: 'لقاءاتي المنشورة', none: 'لم تنشر لقاءً بعد.', required: 'أضف العنوان والموضوع والتاريخ والوقت والتفاصيل.', psychiatristOnly: 'هذا القسم مخصص لحسابات الأطباء النفسيين، ويجب التحقق من هوية الطبيب قبل الإطلاق.' },
+};
+function eventText(language, key) { return (EVENT_COPY[language] || EVENT_COPY.en)[key]; }
 
 export default function App() {
   const [users, setUsers] = useState([]);
   const [accountsReady, setAccountsReady] = useState(false);
   const [accountStorageError, setAccountStorageError] = useState('');
   const [appointments, setAppointments] = useState([]);
+  const [supportEvents, setSupportEvents] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [language, setLanguage] = useState('en');
   const [authMode, setAuthMode] = useState('login');
@@ -425,6 +434,20 @@ export default function App() {
     setAppointments((current) => current.map((appointment) => appointment.id === id ? { ...appointment, status } : appointment));
   }
 
+  function createSupportEvent(details) {
+    if (!currentUser || currentUser.role !== 'doctor') return;
+    setSupportEvents((current) => [{ ...details, id: uid(), doctorId: currentUser.id, doctorName: currentUser.name, attendees: [] }, ...current]);
+  }
+
+  function toggleSupportEvent(eventId) {
+    if (!currentUser || currentUser.role !== 'patient') return;
+    setSupportEvents((current) => current.map((event) => {
+      if (event.id !== eventId) return event;
+      const joined = event.attendees.includes(currentUser.id);
+      return { ...event, attendees: joined ? event.attendees.filter((id) => id !== currentUser.id) : [...event.attendees, currentUser.id] };
+    }));
+  }
+
   if (!accountsReady) {
     return <SafeAreaView style={[styles.safe, { alignItems: 'center', justifyContent: 'center' }]}><ActivityIndicator color={COLORS.teal} /><Text style={styles.screenSubtitle}>Loading saved accounts…</Text></SafeAreaView>;
   }
@@ -456,10 +479,16 @@ export default function App() {
         {currentUser.role === 'patient' && tab === 'assistant' && (
           <ChatAssistant messages={chatMessages} loading={chatLoading} onSend={sendChatMessage} onBack={() => setTab('discover')} />
         )}
+        {currentUser.role === 'patient' && tab === 'events' && (
+          <PatientSupportEvents language={language} events={supportEvents} user={currentUser} onToggleJoin={toggleSupportEvent} />
+        )}
         {currentUser.role === 'doctor' && tab === 'overview' && (
           <DoctorOverview user={currentUser} appointments={clinicAppointments} onNavigate={setTab} />
         )}
         {currentUser.role === 'doctor' && tab === 'profile' && <DoctorProfile user={currentUser} form={form} updateField={updateField} onSave={updateCurrentDoctor} onSaved={showMessage} />}
+        {currentUser.role === 'doctor' && tab === 'events' && isPsychiatrySpecialist(currentUser.specialty) && (
+          <DoctorSupportEvents language={language} user={currentUser} events={supportEvents.filter((event) => event.doctorId === currentUser.id)} form={form} updateField={updateField} onCreate={createSupportEvent} />
+        )}
         {currentUser.role === 'doctor' && tab === 'availability' && <AvailabilityScreen user={currentUser} form={form} updateField={updateField} onSave={updateCurrentDoctor} onMessage={showMessage} />}
         {currentUser.role === 'doctor' && tab === 'team' && (
           <TeamScreen user={currentUser} users={users} form={form} updateField={updateField} onCreate={createSecretary} />
@@ -470,7 +499,7 @@ export default function App() {
         {currentUser.role === 'secretary' && (tab === 'appointments' || tab === 'overview') && (
           <ClinicAppointments appointments={secretaryAppointments} onUpdate={updateAppointment} role="secretary" doctorName={currentUser.doctorName} />
         )}
-        <BottomNav role={currentUser.role} tab={tab} setTab={setTab} language={language} />
+        <BottomNav role={currentUser.role} user={currentUser} tab={tab} setTab={setTab} language={language} />
       </View>
       <Modal visible={Boolean(selectedDoctor)} animationType="slide" transparent onRequestClose={() => setSelectedDoctor(null)}>
         <View style={styles.modalShade}>
@@ -574,7 +603,7 @@ function Input({ label, accessibilityLabel, ...props }) { return <View style={st
 function AuthTop({ language, setLanguage }) { return <View style={styles.authTop}><Brand /><LanguageSelector language={language} onChange={setLanguage} /></View>; }
 function LanguageSelector({ language, onChange }) { return <View style={styles.languageSelector} accessibilityRole="radiogroup" accessibilityLabel={tr(language, 'language')}>{[['en', 'EN'], ['fr', 'FR'], ['ar', 'ع']].map(([code, label]) => <TouchableOpacity key={code} onPress={() => onChange(code)} style={[styles.languageOption, language === code && styles.languageOptionActive]} accessibilityRole="radio" accessibilityLabel={label} accessibilityState={{ selected: language === code }}><Text style={[styles.languageOptionText, language === code && styles.languageOptionTextActive]}>{label}</Text></TouchableOpacity>)}</View>; }
 function PhoneField({ language, value, onChange }) { const digits = phoneLocalDigits(value); return <View style={styles.inputGroup}><Text style={styles.label}>{tr(language, 'phone')}</Text><View style={styles.phoneField}><View style={styles.countryPrefix}><Text style={styles.countryPrefixText}>🇹🇳  +216</Text></View><TextInput style={styles.phoneInput} accessibilityLabel={tr(language, 'phone')} accessibilityHint={tr(language, 'phoneHint')} placeholder="20 123 456" placeholderTextColor="#9AA7A4" value={digits} onChangeText={(text) => onChange(phoneLocalDigits(text))} keyboardType="number-pad" maxLength={8} autoComplete="tel-national" textContentType="telephoneNumber" /></View><Text style={styles.fieldHint}>{tr(language, 'phoneHint')}</Text></View>; }
-function DateField({ label, placeholder, value, onChange, language }) {
+function DateField({ label, placeholder, value, onChange, language, allowFuture = false }) {
   const [open, setOpen] = useState(false);
   const [draftDate, setDraftDate] = useState(getDateValue(value));
   const selected = getDateValue(value);
@@ -585,7 +614,7 @@ function DateField({ label, placeholder, value, onChange, language }) {
       if (event.type === 'set' && date) onChange(dateToDmy(date));
     } else if (date) setDraftDate(date);
   };
-  return <View style={styles.inputGroup}><Text style={styles.label}>{label}</Text><TouchableOpacity style={styles.dateInput} onPress={() => { setDraftDate(selected); setOpen(true); }} accessibilityRole="button" accessibilityLabel={`${label}: ${value || placeholder}`}><Text style={[styles.dateInputText, !value && styles.placeholderText]}>{value || placeholder}</Text><Text style={styles.dateIcon}>▦</Text></TouchableOpacity>{open && Platform.OS === 'android' && <DateTimePicker value={selected} mode="date" display="default" maximumDate={new Date()} onChange={change} />}{Platform.OS === 'ios' && <Modal visible={open} transparent animationType="slide" onRequestClose={close}><View style={styles.modalShade}><View style={styles.dateModalCard}><View style={styles.dateModalHeader}><TouchableOpacity onPress={close}><Text style={styles.linkText}>{tr(language, 'dateCancel')}</Text></TouchableOpacity><Text style={styles.dateModalTitle}>{label}</Text><TouchableOpacity onPress={() => { onChange(dateToDmy(draftDate)); close(); }}><Text style={styles.linkText}>{tr(language, 'dateDone')}</Text></TouchableOpacity></View><DateTimePicker value={draftDate} mode="date" display="spinner" maximumDate={new Date()} onChange={change} locale={language === 'fr' ? 'fr-FR' : language === 'ar' ? 'ar-TN' : 'en-US'} themeVariant="light" /></View></View></Modal>}</View>;
+  return <View style={styles.inputGroup}><Text style={styles.label}>{label}</Text><TouchableOpacity style={styles.dateInput} onPress={() => { setDraftDate(selected); setOpen(true); }} accessibilityRole="button" accessibilityLabel={`${label}: ${value || placeholder}`}><Text style={[styles.dateInputText, !value && styles.placeholderText]}>{value || placeholder}</Text><Text style={styles.dateIcon}>▦</Text></TouchableOpacity>{open && Platform.OS === 'android' && <DateTimePicker value={selected} mode="date" display="default" maximumDate={allowFuture ? undefined : new Date()} minimumDate={allowFuture ? new Date() : undefined} onChange={change} />}{Platform.OS === 'ios' && <Modal visible={open} transparent animationType="slide" onRequestClose={close}><View style={styles.modalShade}><View style={styles.dateModalCard}><View style={styles.dateModalHeader}><TouchableOpacity onPress={close}><Text style={styles.linkText}>{tr(language, 'dateCancel')}</Text></TouchableOpacity><Text style={styles.dateModalTitle}>{label}</Text><TouchableOpacity onPress={() => { onChange(dateToDmy(draftDate)); close(); }}><Text style={styles.linkText}>{tr(language, 'dateDone')}</Text></TouchableOpacity></View><DateTimePicker value={draftDate} mode="date" display="spinner" maximumDate={allowFuture ? undefined : new Date()} minimumDate={allowFuture ? new Date() : undefined} onChange={change} locale={language === 'fr' ? 'fr-FR' : language === 'ar' ? 'ar-TN' : 'en-US'} themeVariant="light" /></View></View></Modal>}</View>;
 }
 function PasswordStrength({ password, language }) {
   const strength = getPasswordStrength(password);
@@ -622,6 +651,26 @@ function PatientAppointments({ appointments, doctors, region, setRegion, locatio
     <Text style={[styles.label, { marginTop: 16 }]}>My appointment requests</Text>
     {appointments.length ? appointments.map((item) => <AppointmentCard key={item.id} appointment={item} patient />) : <View style={styles.emptyCard}><Text style={styles.emptyTitle}>No appointments yet</Text><Text style={styles.emptyCopy}>Your appointment requests and confirmations will appear here.</Text><Button title="Find a doctor" onPress={onDiscover} style={{ marginTop: 18 }} /></View>}
   </ScrollView></View>;
+}
+
+function PatientSupportEvents({ language, events, user, onToggleJoin }) {
+  const t = (key) => eventText(language, key);
+  return <View style={styles.screen}><Text style={styles.eyebrow}>{t('eyebrow')}</Text><Text style={styles.screenTitle}>{t('title')}</Text><Text style={styles.screenSubtitle}>{t('subtitle')}</Text><View style={styles.permissionBox}>{t('safety')}</View><ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 24 }}>{events.length ? events.map((event) => {
+    const joined = event.attendees.includes(user.id);
+    return <View key={event.id} style={styles.appointmentCard}><Text style={styles.cardTitle}>{event.title}</Text><Text style={styles.cardSubtitle}>{event.theme}</Text><View style={styles.appointmentMeta}><Text style={styles.dateText}>▦  {event.date} · {event.time}</Text><Text style={styles.cardSubtitle}>{event.format === 'Online' ? t('online') : t('inPerson')} · {event.place}</Text><Text style={styles.cardSubtitle}>Dr. {event.doctorName}</Text><Text style={styles.cardSubtitle}>{event.attendees.length} {t('attendees')}</Text>{event.description ? <Text style={styles.disclaimer}>{event.description}</Text> : null}</View><TouchableOpacity style={[styles.bookButton, joined && { backgroundColor: COLORS.body }]} onPress={() => onToggleJoin(event.id)} accessibilityRole="button"><Text style={styles.bookButtonText}>{joined ? t('leave') : t('join')}</Text></TouchableOpacity></View>;
+  }) : <View style={styles.emptyCard}><Text style={styles.emptyTitle}>{t('empty')}</Text><Text style={styles.emptyCopy}>{t('emptyHint')}</Text></View>}</ScrollView></View>;
+}
+
+function DoctorSupportEvents({ language, user, events, form, updateField, onCreate }) {
+  const t = (key) => eventText(language, key);
+  const publish = () => {
+    const title = (form.eventTitle || '').trim(); const theme = (form.eventTheme || '').trim();
+    const date = (form.eventDate || '').trim(); const time = (form.eventTime || '').trim(); const place = (form.eventPlace || '').trim();
+    if (!title || !theme || !date || !time || !place) { Alert.alert(t('doctorTitle'), t('required')); return; }
+    onCreate({ title, theme, date, time, format: form.eventFormat || 'Online', place, description: (form.eventDescription || '').trim() });
+    ['eventTitle', 'eventTheme', 'eventDate', 'eventTime', 'eventPlace', 'eventDescription'].forEach((key) => updateField(key, ''));
+  };
+  return <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><Text style={styles.eyebrow}>{t('eyebrow')}</Text><Text style={styles.screenTitle}>{t('doctorTitle')}</Text><Text style={styles.screenSubtitle}>{t('doctorSub')}</Text><View style={styles.permissionBox}>{t('psychiatristOnly')}</View><ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 24 }} keyboardShouldPersistTaps="handled"><View style={styles.formCard}><Input label={t('topic')} value={form.eventTitle || ''} onChangeText={(value) => updateField('eventTitle', value)} /><Input label={t('theme')} value={form.eventTheme || ''} onChangeText={(value) => updateField('eventTheme', value)} /><DateField label={t('date')} placeholder={t('date')} value={form.eventDate || ''} onChange={(value) => updateField('eventDate', value)} language={language} allowFuture /><Input label={t('time')} placeholder="18:00" value={form.eventTime || ''} onChangeText={(value) => updateField('eventTime', value)} /><Text style={styles.label}>{t('format')}</Text><View style={styles.choiceRow}><ChoiceChip title={t('online')} selected={(form.eventFormat || 'Online') === 'Online'} onPress={() => updateField('eventFormat', 'Online')} /><ChoiceChip title={t('inPerson')} selected={form.eventFormat === 'In person'} onPress={() => updateField('eventFormat', 'In person')} /></View><Input label={t('place')} value={form.eventPlace || ''} onChangeText={(value) => updateField('eventPlace', value)} /><Input label={t('description')} value={form.eventDescription || ''} onChangeText={(value) => updateField('eventDescription', value)} multiline style={{ height: 86, textAlignVertical: 'top', paddingTop: 11 }} /><Button title={t('create')} onPress={publish} /></View><SectionTitle title={t('own')} />{events.length ? events.map((event) => <View key={event.id} style={styles.appointmentCard}><Text style={styles.cardTitle}>{event.title}</Text><Text style={styles.cardSubtitle}>{event.theme}</Text><Text style={styles.dateText}>{event.date} · {event.time} · {event.format}</Text></View>) : <View style={styles.emptyCard}><Text style={styles.emptyCopy}>{t('none')}</Text></View>}</ScrollView></KeyboardAvoidingView>;
 }
 
 function ChatAssistant({ messages, loading, onSend, onBack }) {
@@ -673,9 +722,9 @@ function AppointmentCard({ appointment, onUpdate, patient = false }) {
   return <View style={styles.appointmentCard}><View style={styles.appointmentTop}><View style={{ flex: 1 }}><Text style={styles.cardTitle}>{patient ? appointment.doctorName : appointment.patientName}</Text><Text style={styles.cardSubtitle}>{patient ? appointment.specialty : appointment.clinic}</Text></View><View style={[styles.statusPill, { backgroundColor: `${color}18` }]}><Text style={[styles.statusText, { color }]}>{appointment.status}</Text></View></View><View style={styles.appointmentMeta}><Text style={styles.dateText}>▦  {appointment.date} · {appointment.time}</Text></View>{!patient && appointment.status === 'Pending' && <View style={styles.actionRow}><TouchableOpacity style={styles.acceptButton} onPress={() => onUpdate(appointment.id, 'Confirmed')}><Text style={styles.acceptText}>Confirm</Text></TouchableOpacity><TouchableOpacity style={styles.declineButton} onPress={() => onUpdate(appointment.id, 'Declined')}><Text style={styles.declineText}>Decline</Text></TouchableOpacity></View>}</View>;
 }
 
-function BottomNav({ role, tab, setTab }) {
-  const items = role === 'patient' ? [['discover', '⌕', 'Find care'], ['appointments', '▦', 'Appointments'], ['assistant', '✦', 'Assistant']]
-    : role === 'doctor' ? [['overview', '⌂', 'Overview'], ['appointments', '▦', 'Visits'], ['availability', '◷', 'Slots'], ['team', '♧', 'Team'], ['profile', '◎', 'Profile']]
+function BottomNav({ role, user, tab, setTab }) {
+  const items = role === 'patient' ? [['discover', '⌕', 'Find care'], ['appointments', '▦', 'Appointments'], ['assistant', '✦', 'Assistant'], ['events', '◷', 'Events']]
+    : role === 'doctor' ? [['overview', '⌂', 'Overview'], ['appointments', '▦', 'Visits'], ['availability', '◷', 'Slots'], ['team', '♧', 'Team'], ...(isPsychiatrySpecialist(user?.specialty) ? [['events', '♡', 'Events']] : []), ['profile', '◎', 'Profile']]
       : [['overview', '⌂', 'Clinic'], ['appointments', '▦', 'Appointments']];
   return <View style={styles.bottomNav}>{items.map(([key, icon, label]) => <TouchableOpacity key={key} style={styles.navItem} onPress={() => setTab(key)}><Text style={[styles.navIcon, tab === key && styles.navIconActive]}>{icon}</Text><Text style={[styles.navLabel, tab === key && styles.navLabelActive]}>{label}</Text></TouchableOpacity>)}</View>;
 }
