@@ -17,7 +17,7 @@ $env:GROQ_MODEL = "openai/gpt-oss-20b"
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-Keep this API running while using the assistant. The phone and computer must be on the same Wi-Fi. Allow Python through Windows Firewall on private networks if prompted. Assistant messages are processed by GroqCloud; do not send identifying or sensitive health information.
+Keep this API running while using the assistant. The phone and computer must be on the same Wi-Fi. Allow Python through Windows Firewall on private networks if prompted. Groq classifies intent; the assistant does not return generated health answers. It continues with a follow-up, recommends a doctor for personal or concerning issues, and directs suspected emergencies to local emergency services. Assistant messages are processed by GroqCloud; do not send identifying or sensitive health information.
 
 ## Start Expo Go
 

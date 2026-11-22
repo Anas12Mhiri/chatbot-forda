@@ -118,9 +118,21 @@ def build_router(
             )
 
         if classification.intent in {"general_information", "educational", "translation"}:
+            has_assistant_reply = any(turn.role == "assistant" for turn in request.conversation)
+            if has_assistant_reply:
+                message = (
+                    "Merci de m’en avoir parlé. Je ne peux pas fournir d’explication médicale. "
+                    "Si cela concerne votre santé ou vous inquiète, demandez conseil à un médecin; "
+                    "vous pouvez en chercher un dans l’onglet Find care."
+                )
+            else:
+                message = (
+                    "Je peux vous écouter, mais je ne peux pas fournir d’explication ou de conseil médical. "
+                    "Qu’est-ce qui vous préoccupe personnellement ? Si cela vous semble important ou vous inquiète, contactez un médecin."
+                )
             return ChatResponse(
                 level=classification.intent,
-                message=classification.answer,
+                message=message,
                 disclaimer=DISCLAIMER,
             )
 
@@ -149,8 +161,15 @@ def build_router(
         # Personalized requests always receive a professional-care redirect.
         # The model's answer is intentionally discarded for this intent.
         level = "medical_advice"
+        has_assistant_reply = any(turn.role == "assistant" for turn in request.conversation)
         messages = {
-            "medical_advice": "Je ne peux pas poser de diagnostic ni recommander un traitement personnalisé. Veuillez demander conseil à un professionnel de santé qualifié.",
+            "medical_advice": (
+                "Merci de me l’avoir précisé. Je ne peux pas évaluer la gravité ni déterminer la cause ici. "
+                "Veuillez contacter un médecin pour examiner ce problème; vous pouvez en chercher un dans l’onglet Find care."
+                if has_assistant_reply else
+                "Je vous écoute. Je ne peux pas évaluer ou diagnostiquer vos symptômes. Depuis quand avez-vous remarqué cela ? "
+                "Si le problème vous semble important, s’aggrave ou vous inquiète, contactez un médecin."
+            ),
             "self_care_information": "Les règles configurées indiquent que des informations générales de soins personnels peuvent convenir. Si vous êtes inquiet ou si vos symptômes changent, contactez un professionnel de santé.",
         }
         return ChatResponse(
