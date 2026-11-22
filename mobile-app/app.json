@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Careway",
+    "slug": "tech4health-careway",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "org.tech4health.careway"
+    },
+    "android": {
+      "package": "org.tech4health.careway"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Careway to use your location to find nearby doctors."
+        }
+      ]
+    ]
+  }
+}

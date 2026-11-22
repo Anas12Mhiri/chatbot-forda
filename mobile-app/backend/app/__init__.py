@@ -1,0 +1,1 @@
+"""Patient symptom triage API."""

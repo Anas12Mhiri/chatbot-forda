@@ -1,5 +1,9 @@
 # Patient symptom care navigation API
 
+## Expo mobile app
+
+The Careway mobile client and its matching API copy are in [`mobile-app/`](mobile-app/README.md). Follow that guide to run the patient and doctor interfaces in Expo Go and connect the local assistant.
+
 This FastAPI starter supports symptom care navigation, not diagnosis. It does
 not contain a medical rule set: the default policy conservatively returns
 `medical_advice`. A clinician-reviewed policy can be injected with
