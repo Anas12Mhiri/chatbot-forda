@@ -86,6 +86,7 @@ function normalizePhone(value = '') {
 }
 function phoneLocalDigits(value = '') {
   let digits = String(value).replace(/\D/g, '');
+  if (digits.startsWith('00216') && digits.length === 13) digits = digits.slice(5);
   if (digits.startsWith('216') && digits.length > 8) digits = digits.slice(3);
   return digits.slice(0, 8);
 }
@@ -394,13 +395,26 @@ export default function App() {
     showMessage(`Secretary account created for ${name}. They can sign in using ${email} and the password you set.`);
   }
 
-  function signIn() {
+  async function signIn() {
     setAuthError('');
     if (Date.now() < signInLockedUntil) return setAuthError('Too many attempts. Please wait a moment, then try again.');
     const phone = normalizePhone(form.phone || '');
     const password = form.password || '';
     if (!/^\+216\d{8}$/.test(phone) || !password) return setAuthError(tr(language, 'errLoginRequired'));
-    const found = users.find((user) => user.phone === phone && user.password === password && ['patient', 'doctor'].includes(user.role));
+    let availableUsers = users;
+    try {
+      const idsJson = await SecureStore.getItemAsync(ACCOUNT_INDEX_KEY);
+      const ids = idsJson ? JSON.parse(idsJson) : [];
+      const records = await Promise.all(ids.map((id) => SecureStore.getItemAsync(`${ACCOUNT_KEY_PREFIX}${id}`)));
+      const savedUsers = records.filter(Boolean).map((record) => JSON.parse(record));
+      if (savedUsers.length) {
+        availableUsers = savedUsers;
+        setUsers(savedUsers);
+      }
+    } catch {
+      // Keep using the already loaded in-memory accounts if secure storage is temporarily unavailable.
+    }
+    const found = availableUsers.find((user) => normalizePhone(user.phone || '') === phone && user.password === password && ['patient', 'doctor'].includes(user.role));
     if (!found) {
       const nextCount = failedSignIns + 1;
       setFailedSignIns(nextCount);
@@ -554,7 +568,7 @@ function LoginScreen({ language, setLanguage, form, updateField, error, onSubmit
     <AuthTop language={language} setLanguage={setLanguage} />
     <View style={styles.loginIntro}><Text style={styles.eyebrow}>{tr(language, 'careCloser')}</Text><Text style={styles.authTitle}>{tr(language, 'signIn')}</Text><Text style={styles.authSubtitle}>{tr(language, 'signInSubtitle')}</Text></View>
     <PhoneField language={language} value={form.phone || ''} onChange={(v) => updateField('phone', v)} />
-    <Input label={tr(language, 'password')} placeholder={tr(language, 'passwordPlaceholder')} value={form.password || ''} onChangeText={(v) => updateField('password', v)} secureTextEntry autoComplete="password" textContentType="password" />
+    <Input label={tr(language, 'password')} placeholder={tr(language, 'passwordPlaceholder')} value={form.password || ''} onChangeText={(v) => updateField('password', v)} secureTextEntry autoCapitalize="none" autoCorrect={false} autoComplete="password" textContentType="password" />
     <TouchableOpacity style={styles.forgotLink} onPress={onRecovery} accessibilityRole="button"><Text style={styles.linkText}>{tr(language, 'forgot')}</Text></TouchableOpacity>
     {error ? <AuthMessage message={error} /> : null}
     <Button title={tr(language, 'signIn')} onPress={onSubmit} style={{ marginTop: 12 }} />
