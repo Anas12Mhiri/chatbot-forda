@@ -3,6 +3,7 @@ import Constants from 'expo-constants';
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -53,7 +54,7 @@ const COPY = {
     createAccount: 'Create patient account', signupSubtitle: 'We only ask for information needed to set up your account. You can add health details later if needed.', accountFor: 'Who is this account for?', myself: 'Myself', minor: 'A minor', caregiver: 'Someone I support', fullName: 'Full name', yourName: 'Your full name', dob: 'Date of birth', yourDob: 'Your date of birth', datePlaceholder: 'Choose date of birth', patientName: 'Patient’s full name', patientDob: 'Patient’s date of birth', relationship: 'Your relationship to the patient', authority: 'Your authority', guardian: 'Parent or legal guardian', caregiverPlaceholder: 'Authorized caregiver', phoneSignup: 'Phone number', emailOptional: 'Email address (optional)', emailPlaceholder: 'you@example.com', passwordCreate: 'Create a password', confirmPassword: 'Confirm password', language: 'Language', terms: 'I agree to the Terms and Privacy Notice.', marketing: 'I’d like to receive optional product and health service updates.', signupHelper: 'You can change optional communication preferences later. We do not request medical history during signup.', termsRequired: 'Please agree to the Terms and Privacy Notice to create an account.', createButton: 'Create patient account', alreadyRegistered: 'Already registered?',
     passwordWeak: 'Weak', passwordGood: 'Good', passwordPerfect: 'Perfect', passwordWeakHint: 'Use at least 8 characters with uppercase, lowercase, and a number.', passwordGoodHint: 'Good start. Add 12+ characters and a symbol for a stronger password.', passwordPerfectHint: 'Strong mix and length. Avoid reusing this password.', passwordEmpty: 'Password strength', passwordSecurityNote: 'This is a strength estimate, not a guarantee against cyberattacks.',
     errRequired: 'Complete all required fields before continuing.', errDob: 'Choose a valid date of birth.', errPhone: 'Enter exactly 8 digits for your Tunisian phone number.', errEmail: 'Enter a valid email address or leave it blank.', errPassword: 'Use at least 8 characters with an uppercase letter, a lowercase letter, and a number.', errMatch: 'The passwords do not match.', errAdult: 'For someone under 18, choose “A minor” and enter an adult guardian’s details.', errPatientDetails: 'Enter the patient’s name, date of birth, and your relationship or authority.', errGuardianAge: 'The parent, guardian, or caregiver creating this account must be an adult.', errMinorAge: 'The patient’s date of birth must indicate they are under 18.', errGuardianAuthority: 'Confirm that you are the patient’s parent or legal guardian.', errCareAuthority: 'Confirm that you are authorized to manage this patient’s account.', errDuplicate: 'We couldn’t create an account with these details. Try signing in or recovering access.', errSignIn: 'We couldn’t sign you in with those details. Check them or recover access.', errRateLimit: 'Too many attempts. Please wait a moment, then try again.', errLoginRequired: 'Enter your phone number and password.', errRecoveryPhone: 'Enter exactly 8 digits for your Tunisian phone number.', recoveryTitle: 'Recover access', recoverySubtitle: 'Enter your phone number. If an account matches, recovery instructions will be sent.', recoveryGeneric: 'If an account matches those details, recovery instructions will be sent.', continue: 'Continue', backSignIn: '‹  Back to sign in',
-    homeEyebrow: 'HEALTHCARE, MADE CLOSER', findDoctor: 'Find a doctor', searchPlaceholder: 'Doctor name or specialty', allSpecialties: 'All specialties', map: 'Map', list: 'List', findingYou: 'Finding you…', nearLocation: 'Near your location', tunisLocation: 'Tunis, Tunisia', nearby: 'nearby', sortedDistance: '· sorted by distance', tunisPilot: 'TUNIS PILOT', noDoctors: 'No doctors found', tryAnotherSearch: 'Try a different name or specialty.', requestVisit: 'Request a visit', chooseTime: 'Choose time', appointments: 'Appointments', myAppointments: 'My appointments', yourCare: 'YOUR CARE', pendingConfirmation: 'Requests stay pending until the clinic confirms them.', noAppointments: 'No appointments yet', appointmentsAppear: 'Your appointment requests and confirmations will appear here.', findCare: 'Find care',
+    homeEyebrow: 'HEALTHCARE, MADE CLOSER', findDoctor: 'Find a doctor', searchPlaceholder: 'Doctor name or specialty', cityFilter: 'Filter by city or governorate', allSpecialties: 'All specialties', map: 'Map', list: 'List', findingYou: 'Finding you…', nearLocation: 'Near your location', tunisLocation: 'Tunis, Tunisia', nearby: 'nearby', sortedDistance: '· sorted by distance', tunisPilot: 'TUNIS PILOT', noDoctors: 'No doctors found', tryAnotherSearch: 'Try a different name, specialty, or city.', requestVisit: 'Request a visit', chooseTime: 'Choose time', appointments: 'Appointments', myAppointments: 'My appointments', yourCare: 'YOUR CARE', pendingConfirmation: 'Requests stay pending until the clinic confirms them.', noAppointments: 'No appointments yet', appointmentsAppear: 'Your appointment requests and confirmations will appear here.', findCare: 'Find care', syntheticData: 'TEST DATA', directory: 'DIRECTORY', syntheticReviewsOnly: 'Generated test reviews · no score yet', sentimentPending: 'Review sentiment not classified yet', reviewRatio: 'Review score', directoryEntry: 'Directory listing · booking unavailable',
     recoveryNotice: 'If an account matches those details, recovery instructions will be sent.', patientRole: 'Patient', dateDone: 'Done', dateCancel: 'Cancel', appointmentRequestTitle: 'APPOINTMENT REQUEST', appointmentSelectTime: 'Choose an available time', appointmentDisclaimer: 'This sends a request to the clinic. It is not confirmed until the clinic responds. No symptoms or medical history are required.', appointmentSend: 'Send appointment request', appointmentSent: 'Your request was sent. It remains pending until the clinic confirms it.',
   },
   fr: {
@@ -61,7 +62,7 @@ const COPY = {
     createAccount: 'Créer un compte patient', signupSubtitle: 'Nous demandons uniquement les informations nécessaires à la création du compte. Vous pourrez ajouter des informations de santé plus tard.', accountFor: 'Pour qui est ce compte ?', myself: 'Pour moi', minor: 'Un mineur', caregiver: 'Une personne que j’aide', fullName: 'Nom complet', yourName: 'Votre nom complet', dob: 'Date de naissance', yourDob: 'Votre date de naissance', datePlaceholder: 'Choisir la date de naissance', patientName: 'Nom complet du patient', patientDob: 'Date de naissance du patient', relationship: 'Votre lien avec le patient', authority: 'Votre autorisation', guardian: 'Parent ou tuteur légal', caregiverPlaceholder: 'Aidant autorisé', phoneSignup: 'Numéro de téléphone', emailOptional: 'Adresse e-mail (facultatif)', emailPlaceholder: 'vous@exemple.com', passwordCreate: 'Créer un mot de passe', confirmPassword: 'Confirmer le mot de passe', language: 'Langue', terms: 'J’accepte les Conditions et la Notice de confidentialité.', marketing: 'Je souhaite recevoir des actualités facultatives sur les produits et services de santé.', signupHelper: 'Vous pourrez modifier vos préférences de communication. Aucun historique médical n’est demandé à l’inscription.', termsRequired: 'Veuillez accepter les Conditions et la Notice de confidentialité.', createButton: 'Créer le compte patient', alreadyRegistered: 'Déjà inscrit ?',
     passwordWeak: 'Faible', passwordGood: 'Bien', passwordPerfect: 'Excellent', passwordWeakHint: 'Utilisez 8 caractères minimum, avec majuscule, minuscule et chiffre.', passwordGoodHint: 'Bon début. Ajoutez 12 caractères et un symbole pour le renforcer.', passwordPerfectHint: 'Bonne longueur et variété. Évitez de réutiliser ce mot de passe.', passwordEmpty: 'Sécurité du mot de passe', passwordSecurityNote: 'Cette estimation ne garantit pas une protection contre les cyberattaques.',
     errRequired: 'Complétez tous les champs obligatoires.', errDob: 'Choisissez une date de naissance valide.', errPhone: 'Saisissez exactement 8 chiffres pour votre numéro tunisien.', errEmail: 'Saisissez une adresse e-mail valide ou laissez le champ vide.', errPassword: 'Utilisez au moins 8 caractères avec une majuscule, une minuscule et un chiffre.', errMatch: 'Les mots de passe ne correspondent pas.', errAdult: 'Pour une personne de moins de 18 ans, choisissez « Un mineur » et indiquez les coordonnées d’un adulte.', errPatientDetails: 'Saisissez le nom, la date de naissance du patient et votre lien ou autorisation.', errGuardianAge: 'Le parent, tuteur ou aidant qui crée le compte doit être adulte.', errMinorAge: 'La date de naissance du patient doit indiquer qu’il a moins de 18 ans.', errGuardianAuthority: 'Confirmez que vous êtes le parent ou tuteur légal du patient.', errCareAuthority: 'Confirmez que vous êtes autorisé à gérer le compte de ce patient.', errDuplicate: 'Impossible de créer un compte avec ces informations. Essayez de vous connecter ou de récupérer l’accès.', errSignIn: 'Connexion impossible avec ces informations. Vérifiez-les ou récupérez l’accès.', errRateLimit: 'Trop de tentatives. Patientez un instant avant de réessayer.', errLoginRequired: 'Saisissez votre numéro de téléphone et votre mot de passe.', errRecoveryPhone: 'Saisissez exactement 8 chiffres pour votre numéro tunisien.', recoveryTitle: 'Récupérer l’accès', recoverySubtitle: 'Saisissez votre numéro. Si un compte correspond, des instructions seront envoyées.', recoveryGeneric: 'Si un compte correspond, des instructions de récupération seront envoyées.', continue: 'Continuer', backSignIn: '‹  Retour à la connexion',
-    homeEyebrow: 'LES SOINS, PLUS PROCHES', findDoctor: 'Trouver un médecin', searchPlaceholder: 'Nom ou spécialité du médecin', allSpecialties: 'Toutes spécialités', map: 'Carte', list: 'Liste', findingYou: 'Localisation…', nearLocation: 'Près de vous', tunisLocation: 'Tunis, Tunisie', nearby: 'à proximité', sortedDistance: '· triés par distance', tunisPilot: 'PILOTE DE TUNIS', noDoctors: 'Aucun médecin trouvé', tryAnotherSearch: 'Essayez un autre nom ou une autre spécialité.', requestVisit: 'Demander un rendez-vous', chooseTime: 'Choisir un horaire', appointments: 'Rendez-vous', myAppointments: 'Mes rendez-vous', yourCare: 'VOTRE SUIVI', pendingConfirmation: 'Les demandes restent en attente jusqu’à confirmation du cabinet.', noAppointments: 'Aucun rendez-vous', appointmentsAppear: 'Vos demandes et confirmations apparaîtront ici.', findCare: 'Trouver un médecin',
+    homeEyebrow: 'LES SOINS, PLUS PROCHES', findDoctor: 'Trouver un médecin', searchPlaceholder: 'Nom ou spécialité du médecin', cityFilter: 'Filtrer par ville ou gouvernorat', allSpecialties: 'Toutes spécialités', map: 'Carte', list: 'Liste', findingYou: 'Localisation…', nearLocation: 'Près de vous', tunisLocation: 'Tunis, Tunisie', nearby: 'à proximité', sortedDistance: '· triés par distance', tunisPilot: 'PILOTE DE TUNIS', noDoctors: 'Aucun médecin trouvé', tryAnotherSearch: 'Essayez un autre nom, une spécialité ou une ville.', requestVisit: 'Demander un rendez-vous', chooseTime: 'Choisir un horaire', appointments: 'Rendez-vous', myAppointments: 'Mes rendez-vous', yourCare: 'VOTRE SUIVI', pendingConfirmation: 'Les demandes restent en attente jusqu’à confirmation du cabinet.', noAppointments: 'Aucun rendez-vous', appointmentsAppear: 'Vos demandes et confirmations apparaîtront ici.', findCare: 'Trouver un médecin', syntheticData: 'DONNÉES TEST', directory: 'ANNUAIRE', syntheticReviewsOnly: 'Avis générés pour test · score indisponible', sentimentPending: 'Sentiment des avis non classé', reviewRatio: 'Score des avis', directoryEntry: 'Fiche annuaire · rendez-vous indisponible',
     recoveryNotice: 'Si un compte correspond, des instructions de récupération seront envoyées.', patientRole: 'Patient', dateDone: 'Terminé', dateCancel: 'Annuler', appointmentRequestTitle: 'DEMANDE DE RENDEZ-VOUS', appointmentSelectTime: 'Choisissez un horaire disponible', appointmentDisclaimer: 'La demande est envoyée au cabinet. Elle reste en attente jusqu’à sa confirmation. Aucun symptôme ni historique médical n’est requis.', appointmentSend: 'Envoyer la demande', appointmentSent: 'Votre demande a été envoyée. Elle reste en attente de confirmation.',
   },
   ar: {
@@ -69,7 +70,7 @@ const COPY = {
     createAccount: 'إنشاء حساب مريض', signupSubtitle: 'نجمع المعلومات اللازمة لإنشاء الحساب فقط. يمكنك إضافة المعلومات الصحية لاحقًا عند الحاجة.', accountFor: 'لمن هذا الحساب؟', myself: 'لي', minor: 'قاصر', caregiver: 'شخص أعتني به', fullName: 'الاسم الكامل', yourName: 'اسمك الكامل', dob: 'تاريخ الميلاد', yourDob: 'تاريخ ميلادك', datePlaceholder: 'اختر تاريخ الميلاد', patientName: 'الاسم الكامل للمريض', patientDob: 'تاريخ ميلاد المريض', relationship: 'صلة القرابة بالمريض', authority: 'الصلاحية', guardian: 'ولي أو وصي قانوني', caregiverPlaceholder: 'مقدم رعاية معتمد', phoneSignup: 'رقم الهاتف', emailOptional: 'البريد الإلكتروني (اختياري)', emailPlaceholder: 'you@example.com', passwordCreate: 'إنشاء كلمة مرور', confirmPassword: 'تأكيد كلمة المرور', language: 'اللغة', terms: 'أوافق على الشروط وإشعار الخصوصية.', marketing: 'أرغب في تلقي تحديثات اختيارية عن المنتجات والخدمات الصحية.', signupHelper: 'يمكنك تغيير تفضيلات التواصل لاحقًا. لا نطلب السجل الطبي عند التسجيل.', termsRequired: 'يرجى الموافقة على الشروط وإشعار الخصوصية.', createButton: 'إنشاء حساب المريض', alreadyRegistered: 'لديك حساب بالفعل؟',
     passwordWeak: 'ضعيفة', passwordGood: 'جيدة', passwordPerfect: 'ممتازة', passwordWeakHint: 'استخدم 8 أحرف على الأقل مع حرف كبير وصغير ورقم.', passwordGoodHint: 'بداية جيدة. أضف 12 حرفًا ورمزًا لزيادة القوة.', passwordPerfectHint: 'طول وتنوع جيدان. لا تعِد استخدام كلمة المرور.', passwordEmpty: 'قوة كلمة المرور', passwordSecurityNote: 'هذا تقدير لقوة كلمة المرور ولا يضمن الحماية من الهجمات الإلكترونية.',
     errRequired: 'أكمل جميع الحقول المطلوبة.', errDob: 'اختر تاريخ ميلاد صحيحًا.', errPhone: 'أدخل 8 أرقام بالضبط لرقم الهاتف التونسي.', errEmail: 'أدخل بريدًا إلكترونيًا صحيحًا أو اترك الحقل فارغًا.', errPassword: 'استخدم 8 أحرف على الأقل مع حرف كبير وصغير ورقم.', errMatch: 'كلمتا المرور غير متطابقتين.', errAdult: 'لمن هم دون 18 عامًا، اختر «قاصر» وأدخل بيانات شخص بالغ.', errPatientDetails: 'أدخل اسم المريض وتاريخ ميلاده وصلتك به أو صلاحيتك.', errGuardianAge: 'يجب أن يكون ولي الأمر أو مقدم الرعاية بالغًا.', errMinorAge: 'يجب أن يشير تاريخ ميلاد المريض إلى أنه دون 18 عامًا.', errGuardianAuthority: 'أكد أنك ولي الأمر أو الوصي القانوني للمريض.', errCareAuthority: 'أكد أن لديك صلاحية إدارة حساب هذا المريض.', errDuplicate: 'تعذر إنشاء الحساب بهذه البيانات. جرّب تسجيل الدخول أو استعادة الوصول.', errSignIn: 'تعذر تسجيل الدخول بهذه البيانات. تحقق منها أو استعد الوصول.', errRateLimit: 'محاولات كثيرة. انتظر قليلًا ثم أعد المحاولة.', errLoginRequired: 'أدخل رقم الهاتف وكلمة المرور.', errRecoveryPhone: 'أدخل 8 أرقام بالضبط لرقم الهاتف التونسي.', recoveryTitle: 'استعادة الوصول', recoverySubtitle: 'أدخل رقم هاتفك. إذا تطابق مع حساب، فستُرسل تعليمات الاستعادة.', recoveryGeneric: 'إذا تطابق الرقم مع حساب، فستُرسل تعليمات الاستعادة.', continue: 'متابعة', backSignIn: '‹  العودة لتسجيل الدخول',
-    homeEyebrow: 'رعاية أقرب إليك', findDoctor: 'ابحث عن طبيب', searchPlaceholder: 'اسم الطبيب أو التخصص', allSpecialties: 'كل التخصصات', map: 'الخريطة', list: 'القائمة', findingYou: 'جارٍ تحديد موقعك…', nearLocation: 'بالقرب منك', tunisLocation: 'تونس', nearby: 'بالقرب', sortedDistance: '· مرتبة حسب المسافة', tunisPilot: 'تجربة تونس', noDoctors: 'لم يتم العثور على أطباء', tryAnotherSearch: 'جرّب اسمًا أو تخصصًا آخر.', requestVisit: 'طلب موعد', chooseTime: 'اختر وقتًا', appointments: 'المواعيد', myAppointments: 'مواعيدي', yourCare: 'رعايتك', pendingConfirmation: 'يبقى الطلب قيد الانتظار حتى تؤكده العيادة.', noAppointments: 'لا توجد مواعيد بعد', appointmentsAppear: 'ستظهر طلباتك وتأكيدات المواعيد هنا.', findCare: 'ابحث عن رعاية',
+    homeEyebrow: 'رعاية أقرب إليك', findDoctor: 'ابحث عن طبيب', searchPlaceholder: 'اسم الطبيب أو التخصص', cityFilter: 'التصفية حسب المدينة أو الولاية', allSpecialties: 'كل التخصصات', map: 'الخريطة', list: 'القائمة', findingYou: 'جارٍ تحديد موقعك…', nearLocation: 'بالقرب منك', tunisLocation: 'تونس', nearby: 'بالقرب', sortedDistance: '· مرتبة حسب المسافة', tunisPilot: 'تجربة تونس', noDoctors: 'لم يتم العثور على أطباء', tryAnotherSearch: 'جرّب اسمًا أو تخصصًا أو مدينة أخرى.', requestVisit: 'طلب موعد', chooseTime: 'اختر وقتًا', appointments: 'المواعيد', myAppointments: 'مواعيدي', yourCare: 'رعايتك', pendingConfirmation: 'يبقى الطلب قيد الانتظار حتى تؤكده العيادة.', noAppointments: 'لا توجد مواعيد بعد', appointmentsAppear: 'ستظهر طلباتك وتأكيدات المواعيد هنا.', findCare: 'ابحث عن رعاية', syntheticData: 'بيانات تجريبية', directory: 'الدليل', syntheticReviewsOnly: 'آراء مولدة للاختبار · لا توجد نتيجة', sentimentPending: 'لم يتم تصنيف المشاعر بعد', reviewRatio: 'نتيجة الآراء', directoryEntry: 'قائمة دليل · الحجز غير متاح',
     recoveryNotice: 'إذا تطابق الرقم مع حساب، فستُرسل تعليمات الاستعادة.', patientRole: 'مريض', dateDone: 'تم', dateCancel: 'إلغاء', appointmentRequestTitle: 'طلب موعد', appointmentSelectTime: 'اختر وقتًا متاحًا', appointmentDisclaimer: 'يُرسل هذا طلبًا إلى العيادة. لا يتأكد الموعد حتى ترد العيادة. لا يلزم إدخال الأعراض أو السجل الطبي.', appointmentSend: 'إرسال طلب الموعد', appointmentSent: 'تم إرسال طلبك. سيبقى معلقًا حتى تؤكده العيادة.',
   },
 };
@@ -115,6 +116,9 @@ function getPasswordStrength(password = '') {
   if (password.length >= 12 && mixed === 3 && /[^A-Za-z0-9]/.test(password)) return { level: 3, label: 'passwordPerfect', color: '#3F9277' };
   if (password.length >= 8 && mixed === 3) return { level: 2, label: 'passwordGood', color: '#C79145' };
   return { level: 1, label: 'passwordWeak', color: '#C36A63' };
+}
+function normalizeSearch(value = '') {
+  return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 }
 function distanceKm(from, to) {
   const radians = (value) => (value * Math.PI) / 180;
@@ -170,7 +174,11 @@ export default function App() {
   const [signInLockedUntil, setSignInLockedUntil] = useState(0);
   const [tab, setTab] = useState('discover');
   const [query, setQuery] = useState('');
-  const [specialty, setSpecialty] = useState('All specialties');
+  const [specialty, setSpecialty] = useState('*');
+  const [cityFilter, setCityFilter] = useState('');
+  const [catalogDoctors, setCatalogDoctors] = useState([]);
+  const [catalogCities, setCatalogCities] = useState([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [mapRegion, setMapRegion] = useState(TUNIS);
   const [userLocation, setUserLocation] = useState({ latitude: TUNIS.latitude, longitude: TUNIS.longitude });
   const [locationLabel, setLocationLabel] = useState('Tunis, Tunisia');
@@ -202,6 +210,44 @@ export default function App() {
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    async function loadDirectory() {
+      try {
+        const response = await fetch(`${CHAT_API_BASE_URL}/doctors/catalog`);
+        if (!response.ok) throw new Error('Doctor directory unavailable');
+        const payload = await response.json();
+        if (!active) return;
+        const records = (payload.doctors || []).map((doctor) => ({
+          id: doctor.doctor_id,
+          name: doctor.name,
+          specialty: doctor.specialty,
+          clinic: doctor.clinic || 'Medical office',
+          address: doctor.address || [doctor.city, doctor.governorate].filter(Boolean).join(', '),
+          city: doctor.city || '',
+          governorate: doctor.governorate || '',
+          phone: doctor.phone || '',
+          latitude: null,
+          longitude: null,
+          directory: true,
+          reviewsSynthetic: Boolean(doctor.reviews_synthetic),
+          reviewCount: doctor.review_count || 0,
+          recommendationRatio: doctor.recommendation_ratio,
+          slots: [],
+        }));
+        setCatalogDoctors(records);
+        setCatalogCities(payload.cities || []);
+      } catch {
+        if (active) setCatalogDoctors([]);
+      } finally {
+        if (active) setCatalogLoading(false);
+      }
+    }
+    loadDirectory();
+    const refreshTimer = setInterval(loadDirectory, 30000);
+    return () => { active = false; clearInterval(refreshTimer); };
+  }, []);
+
   async function persistAccounts(nextUsers) {
     // Store each record separately so a growing account list does not exceed
     // the secure store's per-value size limit.
@@ -213,20 +259,30 @@ export default function App() {
   }
 
   const providers = useMemo(() => [
-    ...DEMO_DOCTORS,
-    ...DIRECTORY_DOCTORS,
+    ...(catalogDoctors.length ? catalogDoctors : [...DEMO_DOCTORS, ...DIRECTORY_DOCTORS]),
     ...users.filter((user) => user.role === 'doctor').map((user) => ({
       id: user.id, name: user.name, specialty: user.specialty, clinic: user.clinic,
       address: user.address, latitude: user.latitude || null,
       longitude: user.longitude || null, doctorAccountId: user.id, slots: user.slots || APPOINTMENT_SLOTS,
     })),
-  ], [users]);
+  ], [catalogDoctors, users]);
+
+  const specialtyOptions = useMemo(() => ['*', ...Array.from(new Set(providers.map((doctor) => doctor.specialty).filter(Boolean))).sort((a, b) => a.localeCompare(b))], [providers]);
+  const cityOptions = useMemo(() => Array.from(new Set([...catalogCities, ...providers.flatMap((doctor) => [doctor.city, doctor.governorate]).filter(Boolean)])).sort((a, b) => a.localeCompare(b)), [catalogCities, providers]);
 
   const nearbyDoctors = useMemo(() => providers
-    .filter((doctor) => specialtyMatches(specialty, doctor.specialty)
-      && (!query.trim() || searchNormalize(`${doctor.name} ${doctor.specialty} ${doctor.clinic} ${doctor.address}`).includes(searchNormalize(query))))
-    .map((doctor) => ({ ...doctor, distance: Number.isFinite(doctor.latitude) && Number.isFinite(doctor.longitude) ? distanceKm(userLocation, doctor) : null }))
-    .sort((a, b) => (a.distance ?? Number.POSITIVE_INFINITY) - (b.distance ?? Number.POSITIVE_INFINITY) || a.name.localeCompare(b.name)), [providers, specialty, query, userLocation]);
+    .filter((doctor) => (specialty === '*' || normalizeSearch(doctor.specialty) === normalizeSearch(specialty))
+      && (!cityFilter.trim() || normalizeSearch(`${doctor.city || ''} ${doctor.governorate || ''} ${doctor.address || ''}`).includes(normalizeSearch(cityFilter)))
+      && (!query.trim() || normalizeSearch(`${doctor.name} ${doctor.specialty} ${doctor.clinic} ${doctor.address} ${doctor.city || ''} ${doctor.governorate || ''}`).includes(normalizeSearch(query))))
+    .map((doctor) => ({
+      ...doctor,
+      distance: Number.isFinite(doctor.latitude) && Number.isFinite(doctor.longitude) ? distanceKm(userLocation, doctor) : null,
+    }))
+    .sort((a, b) => {
+      const scoreA = Number.isFinite(a.recommendationRatio) ? a.recommendationRatio : -1;
+      const scoreB = Number.isFinite(b.recommendationRatio) ? b.recommendationRatio : -1;
+      return scoreB - scoreA || a.name.localeCompare(b.name);
+    }), [providers, specialty, cityFilter, query, userLocation]);
 
   const myAppointments = appointments.filter((appointment) => appointment.patientId === currentUser?.id);
   const clinicAppointments = appointments.filter((appointment) => appointment.doctorId === currentUser?.id);
@@ -514,7 +570,8 @@ export default function App() {
         {currentUser.role === 'patient' && tab === 'discover' && (
           <PatientDiscovery
             language={language} doctors={nearbyDoctors} query={query} setQuery={setQuery} specialty={specialty}
-            setSpecialty={setSpecialty} onBook={requestAppointment}
+            specialtyOptions={specialtyOptions} setSpecialty={setSpecialty} cityOptions={cityOptions} cityFilter={cityFilter}
+            setCityFilter={setCityFilter} catalogLoading={catalogLoading} onBook={requestAppointment}
           />
         )}
         {currentUser.role === 'patient' && tab === 'appointments' && (
@@ -673,20 +730,25 @@ function Button({ title, onPress, style }) { return <TouchableOpacity style={[st
 function Header({ user, onLogout, onProfile }) { return <View style={styles.header}><Brand /><View style={styles.headerActions}>{user.role === 'patient' && <TouchableOpacity style={styles.profileShortcut} onPress={onProfile} accessibilityRole="button" accessibilityLabel="Manage my profile"><Text style={styles.profileShortcutIcon}>{initials(user.contactName || user.name)}</Text><Text style={styles.profileShortcutLabel}>My profile</Text></TouchableOpacity>}<TouchableOpacity style={styles.headerUser} onPress={onLogout} accessibilityRole="button" accessibilityLabel="Sign out"><View style={styles.headerAvatar}><Text style={styles.avatarText}>{initials(user.name)}</Text></View><Text style={styles.headerMenu}>⌄</Text></TouchableOpacity></View></View>; }
 function Avatar({ name }) { return <View style={styles.doctorAvatar}><Text style={styles.doctorAvatarText}>{initials(name)}</Text></View>; }
 
-function PatientDiscovery({ doctors, query, setQuery, specialty, setSpecialty, onBook }) {
+function PatientDiscovery({ language, doctors, query, setQuery, specialty, specialtyOptions, setSpecialty, cityOptions, cityFilter, setCityFilter, catalogLoading, onBook }) {
+  const citySuggestions = cityOptions.filter((city) => !cityFilter.trim() || normalizeSearch(city).includes(normalizeSearch(cityFilter))).slice(0, 10);
   return <View style={styles.screen}>
-    <View style={styles.welcomeRow}><View><Text style={styles.eyebrow}>HEALTHCARE, MADE CLOSER</Text><Text style={styles.screenTitle}>Find a doctor</Text></View></View>
+    <View style={styles.welcomeRow}><View><Text style={styles.eyebrow}>{tr(language, 'homeEyebrow')}</Text><Text style={styles.screenTitle}>{tr(language, 'findDoctor')}</Text></View></View>
     <Text style={styles.screenSubtitle}>Search by name or specialty to find a doctor who meets your needs.</Text>
-    <View style={styles.searchInputWrap}><Text style={styles.searchIcon}>⌕</Text><TextInput style={styles.searchInput} placeholder="Doctor name or specialty" placeholderTextColor="#9AA7A4" value={query} onChangeText={setQuery} returnKeyType="search" /></View>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.specialtyRow}>{SPECIALTIES.map((item) => <TouchableOpacity key={item} onPress={() => setSpecialty(item)} style={[styles.specialtyChip, specialty === item && styles.specialtyChipActive]}><Text style={[styles.specialtyText, specialty === item && styles.specialtyTextActive]}>{item}</Text></TouchableOpacity>)}</ScrollView>
-    <View style={styles.resultsHeader}><Text style={styles.resultsTitle}>{doctors.length} doctors</Text><Text style={styles.demoLabel}>TUNISIA DIRECTORY</Text></View>
-    <ScrollView style={styles.doctorResults} contentContainerStyle={{ paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
-      {doctors.length ? doctors.map((doctor) => <DoctorCard key={doctor.id} doctor={doctor} onBook={() => onBook(doctor)} />) : <View style={styles.emptyCard}><Text style={styles.emptyTitle}>No doctors found</Text><Text style={styles.emptyCopy}>Try a different name or specialty.</Text></View>}
-    </ScrollView>
+    <View style={styles.searchInputWrap}><Text style={styles.searchIcon}>⌕</Text><TextInput style={styles.searchInput} placeholder={tr(language, 'searchPlaceholder')} placeholderTextColor="#9AA7A4" value={query} onChangeText={setQuery} returnKeyType="search" /></View>
+    <View style={[styles.searchInputWrap, { marginTop: 7 }]}><Text style={styles.locationPin}>⌖</Text><TextInput style={styles.searchInput} placeholder={tr(language, 'cityFilter')} placeholderTextColor="#9AA7A4" value={cityFilter} onChangeText={setCityFilter} returnKeyType="search" /></View>
+    {citySuggestions.length > 0 && <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.specialtyRow}>{citySuggestions.map((city) => <TouchableOpacity key={city} onPress={() => setCityFilter(city)} style={[styles.specialtyChip, normalizeSearch(cityFilter) === normalizeSearch(city) && styles.specialtyChipActive]}><Text style={[styles.specialtyText, normalizeSearch(cityFilter) === normalizeSearch(city) && styles.specialtyTextActive]}>{city}</Text></TouchableOpacity>)}</ScrollView>}
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.specialtyRow}>{specialtyOptions.map((item) => <TouchableOpacity key={item} onPress={() => setSpecialty(item)} style={[styles.specialtyChip, specialty === item && styles.specialtyChipActive]}><Text style={[styles.specialtyText, specialty === item && styles.specialtyTextActive]}>{item === '*' ? tr(language, 'allSpecialties') : item}</Text></TouchableOpacity>)}</ScrollView>
+    <View style={styles.resultsHeader}><Text style={styles.resultsTitle}>{doctors.length} doctors</Text><Text style={styles.demoLabel}>{catalogLoading ? 'LOADING DIRECTORY' : 'TUNIS DIRECTORY'}</Text></View>
+    <FlatList style={styles.doctorResults} data={doctors} keyExtractor={(doctor) => doctor.id} renderItem={({ item }) => <DoctorCard language={language} doctor={item} onBook={() => onBook(item)} />} contentContainerStyle={{ paddingBottom: 20 }} showsVerticalScrollIndicator={false} ListEmptyComponent={<View style={styles.emptyCard}><Text style={styles.emptyTitle}>{tr(language, 'noDoctors')}</Text><Text style={styles.emptyCopy}>{tr(language, 'tryAnotherSearch')}</Text></View>} />
   </View>;
 }
 
-function DoctorCard({ doctor, onBook }) { const directoryOnly = doctor.directory && !doctor.doctorAccountId; return <View style={styles.doctorCard}><View style={styles.doctorCardTop}><Avatar name={doctor.name} /><View style={{ flex: 1 }}><View style={styles.nameLine}><Text style={styles.cardTitle} numberOfLines={1}>{doctor.name}</Text><Text style={styles.verified}>{doctor.demo ? 'DEMO' : doctor.directory ? 'DIRECTORY' : 'NEW'}</Text></View><Text style={styles.cardSubtitle}>{doctor.specialty}{doctor.directory ? ` · ${doctor.reviewCount} reviews` : ''}</Text><Text style={styles.addressText} numberOfLines={2}>{doctor.clinic} · {doctor.address}</Text></View><Text style={styles.distanceText}>{doctor.distance == null ? 'Map pin unavailable' : formatDistance(doctor.distance)}</Text></View><View style={styles.cardFooter}><Text style={styles.nextAvailable}><Text style={styles.greenDot}>● </Text>{directoryOnly ? 'Directory listing' : 'Request a visit'}</Text><TouchableOpacity style={[styles.bookButton, directoryOnly && { backgroundColor: COLORS.muted }]} onPress={onBook} disabled={directoryOnly}><Text style={styles.bookButtonText}>{directoryOnly ? 'Listed' : 'Choose time'}</Text></TouchableOpacity></View></View>; }
+function DoctorCard({ language, doctor, onBook }) {
+  const score = Number.isFinite(doctor.recommendationRatio) ? `${tr(language, 'reviewRatio')}: ${doctor.recommendationRatio.toFixed(1)}%` : doctor.reviewsSynthetic ? tr(language, 'syntheticReviewsOnly') : tr(language, 'sentimentPending');
+  const location = [doctor.clinic, doctor.address].filter(Boolean).join(' · ');
+  return <View style={styles.doctorCard}><View style={styles.doctorCardTop}><Avatar name={doctor.name} /><View style={{ flex: 1 }}><View style={styles.nameLine}><Text style={styles.cardTitle} numberOfLines={1}>{doctor.name}</Text><Text style={styles.verified}>{doctor.directory ? (doctor.reviewsSynthetic ? tr(language, 'syntheticData') : tr(language, 'directory')) : doctor.demo ? 'DEMO' : 'NEW'}</Text></View><Text style={styles.cardSubtitle}>{doctor.specialty}</Text><Text style={styles.addressText} numberOfLines={2}>{location || [doctor.city, doctor.governorate].filter(Boolean).join(', ')}</Text><Text style={styles.addressText} numberOfLines={1}>{score}{doctor.reviewCount ? ` · ${doctor.reviewCount}` : ''}</Text></View>{Number.isFinite(doctor.distance) && <Text style={styles.distanceText}>{formatDistance(doctor.distance)}</Text>}</View><View style={styles.cardFooter}>{doctor.directory ? <Text style={styles.nextAvailable}>{doctor.phone ? `☎ ${doctor.phone}` : tr(language, 'directoryEntry')}</Text> : <><Text style={styles.nextAvailable}><Text style={styles.greenDot}>● </Text>{tr(language, 'requestVisit')}</Text><TouchableOpacity style={styles.bookButton} onPress={onBook}><Text style={styles.bookButtonText}>{tr(language, 'chooseTime')}</Text></TouchableOpacity></>}</View></View>;
+}
 
 function PatientAppointments({ appointments, doctors, region, setRegion, locationLabel, locating, onLocate, onDiscover }) {
   const mappedDoctors = doctors.filter((doctor) => Number.isFinite(doctor.latitude) && Number.isFinite(doctor.longitude));

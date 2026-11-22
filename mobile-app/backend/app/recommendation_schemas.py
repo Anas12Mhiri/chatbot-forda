@@ -3,7 +3,7 @@
 import math
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 Criterion = Literal[
     "location",
@@ -24,6 +24,90 @@ class Qualification(BaseModel):
     specialty: str | None = Field(default=None, max_length=120)
     level: Literal["specialist", "postgraduate", "certification", "general"]
     verified: bool = False
+
+
+class DoctorReview(BaseModel):
+    """Review text and its optional model classification."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(min_length=1, max_length=4000)
+    sentiment: Literal["positif", "neutre", "négatif"] | None = None
+
+
+class DoctorCatalogItem(BaseModel):
+    """Public directory fields needed by the doctor search screen."""
+
+    doctor_id: str
+    name: str
+    specialty: str
+    clinic: str | None = None
+    address: str | None = None
+    city: str | None = None
+    governorate: str | None = None
+    phone: str | None = None
+    email: str | None = None
+    experience_years: int | None = None
+    experience_synthetic: bool = False
+    review_count: int = 0
+    reviews_synthetic: bool = False
+    positive_reviews: int = 0
+    neutral_reviews: int = 0
+    negative_reviews: int = 0
+    recommendation_ratio: float | None = None
+
+
+class DoctorCatalogResponse(BaseModel):
+    doctors: list[DoctorCatalogItem]
+    total: int
+    specialties: list[str]
+    cities: list[str]
+
+
+class ReviewRecommendationRequest(BaseModel):
+    """Optional directory filters; they never contribute to the score."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    specialty: str | None = Field(default=None, max_length=120)
+    city: str | None = Field(default=None, max_length=120)
+    count: int = Field(default=20, ge=1, le=500)
+
+
+class ReviewRecommendationItem(DoctorCatalogItem):
+    recommendation_ratio: float
+
+
+class ReviewRecommendationResponse(BaseModel):
+    status: Literal["recommended", "no_classified_reviews", "no_matches"]
+    recommendations: list[ReviewRecommendationItem]
+    total: int
+
+
+class ReviewSubmission(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(min_length=1, max_length=4000)
+
+    @field_validator("text")
+    @classmethod
+    def trim_text(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Le texte de l’avis ne peut pas être vide.")
+        return value
+
+
+class ReviewScoreResponse(BaseModel):
+    doctor_id: str
+    review_id: str | None = None
+    sentiment: Literal["positif", "neutre", "négatif"] | None = None
+    review_count: int = 0
+    positive_reviews: int = 0
+    neutral_reviews: int = 0
+    negative_reviews: int = 0
+    recommendation_ratio: float | None = None
+    updated_at: str | None = None
 
 
 class DoctorProfile(BaseModel):
@@ -48,6 +132,12 @@ class DoctorProfile(BaseModel):
     review_count: int = Field(default=0, ge=0)
     biography: str | None = Field(default=None, max_length=8000)
     education: list[Qualification] | None = Field(default=None, max_length=50)
+    city: str | None = Field(default=None, max_length=120)
+    governorate: str | None = Field(default=None, max_length=120)
+    clinic: str | None = Field(default=None, max_length=200)
+    reviews: list[DoctorReview] = Field(default_factory=list, max_length=100)
+    reviews_synthetic: bool = False
+    experience_synthetic: bool = False
 
     @model_validator(mode="after")
     def validate_coordinates_and_reviews(self) -> "DoctorProfile":

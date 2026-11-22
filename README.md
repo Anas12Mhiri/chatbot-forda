@@ -66,129 +66,19 @@ scope. Suspected emergencies should be directed to local emergency services; no
 country or emergency number is assumed. This starter does not provide medication
 doses or treatment instructions.
 
-## Doctor recommendation data API
+## Doctor directory and review-only recommendations
 
-`POST /doctors/recommendations` ranks doctor profiles using only the explicit
-request and structured catalog. It does not call Ollama. The colleague's UI can
-call this endpoint directly; no interface files were changed. This repository
-does not include a real doctor database, so the default catalog is empty and the
-endpoint returns `no_matches` until a catalog is connected. The included
-synthetic profiles are confined to tests and are not production data.
+The doctor catalogue is loaded from the UTF-8 JSON array set by `DOCTOR_DATA_PATH`. The catalogue and sentiment model are local assets and are intentionally excluded from Git; after cloning, provide your own files and set `DOCTOR_DATA_PATH` and `DOCTOR_SENTIMENT_MODEL_PATH` to their paths. For example, in PowerShell, set each variable to the full path of its file before starting the API. In this working copy, the ignored files under `data/` remain available locally. French directory fields are normalized by the repository; `lib_deleg` is used as the city when `lib_localite` is empty, and `lib_gouv` is retained as the governorate.
 
-For a local data source, set `DOCTOR_DATA_PATH` to a UTF-8 JSON file containing
-an array of doctor objects, then start the app. The file is validated on every
-request. Required fields are `doctor_id`, `name`, and `specialty`. Optional
-fields are `specialties`, `subspecialties`, `phone`, `email`, `address`, paired
-`latitude`/`longitude`, `experience_years`, `operations_count`,
-`operation_specialties`, `average_rating`, `review_count`, `biography`, and
-`education`. Education entries use `title`, `level` (`specialist`,
-`postgraduate`, `certification`, or `general`), optional `specialty`, and
-`verified`. Do not add patient information to doctor records.
+`GET /doctors/catalog` returns doctor cards and supports `specialty`, `city`, and `query` filters. The Expo discovery screen also provides specialty chips and a city/governorate text filter. Doctors without coordinates are not given a map pin or distance estimate.
 
-```powershell
-$env:DOCTOR_DATA_PATH = "E:\data\doctors.json"
-$env:OLLAMA_MODEL = "qwen3:1.7b" # Optional; this does not affect rankings.
-uvicorn app.main:app --reload
-```
+`POST /doctors/recommendations` ranks doctors only by sentiment labels from persisted, real reviews. Specialty and city are eligibility filters; they do not affect the score. For counts `P` (positive), `U` (neutral), `N` (negative), and smoothing value `k=10`, the score is `100 * (P + 0.5*U + 0.5*k) / (P + U + N + k)`. Doctors with no real classified reviews are not ranked. Generated demonstration reviews are excluded from production scores. The TF-IDF + LogisticRegression pipeline at `DOCTOR_SENTIMENT_MODEL_PATH` classifies each submitted review. Class IDs are mapped as 0=negative, 1=neutral, 2=positive. No LLM is used for review classification; the LLM-backed health chat is separate. The model was serialized with scikit-learn 1.6.1, so both requirements files pin that version.
 
-Example request (the patient supplies specialty and any location; the API never
-guesses either):
+`POST /doctors/{doctor_id}/reviews` accepts `{"text": "..."}` and requires the `X-Review-Submission-Token` header. Set `DOCTOR_REVIEW_SUBMISSION_TOKEN` on the backend or inject it at the authenticated API gateway; never embed this shared secret in the Expo app. The endpoint classifies the text, writes the review to `data/doctor_reviews.sqlite3`, and updates that doctor's sentiment counters and ratio in one SQLite transaction. Its response includes the predicted sentiment, counts, ratio, and update time. `GET /doctors/{doctor_id}/review-score` returns the saved score. Set `DOCTOR_REVIEWS_DB_PATH` to move the database to a persistent volume. The app refreshes the directory every 30 seconds so other clients see score changes.
 
-```json
-{
-  "patient_query": "Je cherche un cardiologue pour les troubles du rythme",
-  "specialty": "cardiologie",
-  "latitude": 36.8,
-  "longitude": 10.18,
-  "count": 3,
-  "criterion_preferences": {"location": 0.3, "biography": 0.7}
-}
-```
+The previous multi-criteria AHP/TOPSIS recommender is not used by the active recommendation API. The score is based only on review sentiment output. It is a review-based recommendation ratio, not evidence of clinical quality or treatment outcomes.
 
-With the default empty catalog, the response is explicitly:
-
-```json
-{
-  "status": "no_matches",
-  "recommendations": [],
-  "unranked_profiles": [],
-  "algorithm": {
-    "method": "AHP-TOPSIS",
-    "weights_source": "baseline",
-    "weights": {},
-    "consistency_ratio": null,
-    "maximum_eigenvalue": null,
-    "consistency_index": null,
-    "note": "Le score mesure l’adéquation du profil aux critères fournis; il ne prouve pas une supériorité médicale ni un résultat clinique et ne remplace pas un avis médical. En cas d’urgence présumée, contactez les services d’urgence locaux."
-  },
-  "excluded_for_insufficient_information": 0,
-  "message": "Aucune correspondance de spécialité n’a été trouvée."
-}
-```
-
-If location is omitted, the location criterion is removed and the remaining
-weights are renormalized. Doctors are eligible only when a configured specialty
-label or synonym matches. If no doctor is eligible, the response has
-`status: "no_matches"`; if eligible profiles have no usable ranking data, it
-has `status: "insufficient_information"`. Missing individual values are
-median-imputed for TOPSIS (neutral rather than zero), named in
-`missing_information`, and never presented as known facts. Profiles below the
-minimum are listed in `unranked_profiles`, with their unavailable fields.
-Missing criteria
-across the whole candidate set are excluded and the effective weights are
-renormalized. At least two scored criteria are required for a profile to be
-ranked (configurable with `minimum_scored_criteria`); otherwise the API returns
-`insufficient_information` or counts that profile as excluded. Operations count
-only when the profile identifies the operation specialty. Review score is a
-Bayesian average, not a measure of clinical success.
-
-### Method and configurable parameters
-
-The pure mathematical implementation is in `app/recommendation_engine.py`;
-the API schemas, repository boundary, and route are in
-`app/recommendation_schemas.py`, `app/doctor_repository.py`, and
-`app/recommendation_routes.py`. `create_app()` accepts a `doctor_repository`
-and `recommendation_engine`, so an adapter for the colleague's database can
-implement `DoctorRepository.list_doctors()` without changing the ranking code.
-
-The initial fixed baseline weights are location 0.15, experience 0.20,
-operations 0.10, reviews 0.25, biography 0.20, and education 0.10. They are
-configurable but are not clinically validated. The engine uses:
-
-- Location: Haversine distance with earth radius 6,371 km, then
-  `exp(-distance_km / k)` (`k=10` by default).
-- Experience: `min(years / Y_max, 1)` (`Y_max=20`).
-- Relevant operations: `min(count / O_max, 1)` (`O_max=500`); counts without
-  operation-specialty metadata are unavailable.
-- Reviews: `(n * doctor_average + m * evaluated_population_average) / (n + m)`,
-  then divided by 5 (`m=20`). Doctors without reviews have no review score.
-- Biography match: configurable weighted combination of specialty taxonomy
-  overlap and standard-library TF-IDF/cosine similarity (default 0.5 each).
-  The starter taxonomy is intentionally small and configurable, not a clinical
-  ontology; supported matching language follows the current French/English UI.
-- Education: only verified, specialty-matched qualifications count. Levels
-  score specialist 1.0, postgraduate 0.75, certification 0.5, and general 0.25.
-  Institution reputation is not used. These scoring constants are configurable
-  in code and are not quality or outcome claims.
-
-All criteria are converted to benefit scores in [0,1]. TOPSIS vector-normalizes
-the decision matrix, applies effective weights, derives positive/negative
-ideals, computes Euclidean distances, and returns `D- / (D+ + D-)`. A tie is
-broken by normalized doctor name and then ID. Per-request `criterion_preferences`
-can supply nonnegative relative weights; they are normalized over available
-criteria.
-
-For AHP mode, configure `RecommendationSettings(weight_mode="ahp",
-pairwise_comparisons=...)`. Matrix order is location, experience, operations,
-reviews, biography, education. Values follow the reciprocal Saaty 1..9 scale;
-the engine calculates and exposes lambda-max, CI, and CR in the API,
-and rejects `CR >= 0.10` with HTTP 422 so comparisons can be revised. Baseline
-weights remain the default and are reported as `weights_source: "baseline"`;
-they are not claimed to have been derived by AHP.
-
-Every score is a profile-match score for the supplied preferences, not proof
-that a doctor is medically superior or that a clinical outcome is likely. The
-API does not infer a specialty from symptoms or provide medical advice.
+The default catalogue file contains generated demo reviews and generated experience values paired with directory profiles. Do not present those review-based scores or experience values as verified facts. Replace the demo review data with appropriately sourced reviews before production use.
 
 ## Run automated tests
 
