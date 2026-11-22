@@ -1,4 +1,4 @@
-# Careway mobile app
+# AI-HealthLab mobile app
 
 This Expo Go client contains the patient and doctor interfaces. It uses JavaScript and targets Node.js 20.20.0 with Expo SDK 54.
 

@@ -1,23 +1,33 @@
 {
   "expo": {
-    "name": "Careway",
+    "name": "AI-HealthLab",
     "slug": "tech4health-careway",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./assets/ai-healthlab-app-icon.png",
+    "splash": {
+      "image": "./assets/ai-healthlab-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "org.tech4health.careway"
     },
     "android": {
-      "package": "org.tech4health.careway"
+      "package": "org.tech4health.careway",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/ai-healthlab-app-icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
     },
     "plugins": [
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Allow Careway to use your location to find nearby doctors."
+          "locationWhenInUsePermission": "Allow AI-HealthLab to use your location to find nearby doctors."
         }
       ]
     ]
